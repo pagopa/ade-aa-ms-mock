@@ -1,0 +1,12 @@
+[
+    { 
+        "fiscalCode": "DROLSS85S20H501F",
+        "companies": [
+            {
+                "fiscalCode": "00111111111",
+                "organizationName": "Test",
+                "pec": "aaa@prc.it"
+            }
+        ]
+    }
+]
