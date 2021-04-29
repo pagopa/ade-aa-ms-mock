@@ -1,5 +1,4 @@
 import { errorsToReadableMessages } from "@pagopa/ts-commons/lib/reporters";
-import { pick } from "@pagopa/ts-commons/lib/types";
 import { FastifyReply } from "fastify/types/reply";
 import * as t from "io-ts";
 

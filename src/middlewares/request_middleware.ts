@@ -1,8 +1,6 @@
 import { FastifyReply } from "fastify/types/reply";
 import { FastifyRequest } from "fastify/types/request";
-import { RouteGenericInterface } from "fastify/types/route";
 import { TaskEither } from "fp-ts/lib/TaskEither";
-import { IncomingMessage, Server, ServerResponse } from "http";
 import { Response } from "../utils/response";
 
 export const withRequestMiddlewares = (
