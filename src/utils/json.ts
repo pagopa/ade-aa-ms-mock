@@ -10,16 +10,20 @@ import * as fs from "fs";
 import * as t from "io-ts";
 import { errorsToError } from "./errorsFormatter";
 
+export const Companies = t.readonlyArray(
+  t.interface({
+    fiscalCode: OrganizationFiscalCode,
+    organizationName: NonEmptyString,
+    pec: EmailString
+  }),
+  "companies"
+);
+
+export type Companies = t.TypeOf<typeof Companies>;
+
 export const UsersCompanies = t.readonlyArray(
   t.interface({
-    companies: t.readonlyArray(
-      t.interface({
-        fiscalCode: OrganizationFiscalCode,
-        organizationName: NonEmptyString,
-        pec: EmailString
-      }),
-      "companies"
-    ),
+    companies: Companies,
     fiscalCode: FiscalCode
   })
 );
@@ -31,14 +35,12 @@ const readFileAsync = taskify(fs.readFile);
 export const parseUsers = (): TaskEither<Error, UsersCompanies> =>
   readFileAsync("./conf/companies.json")
     .bimap(
-      err => new Error(err.message),
+      err => new Error(`Error parsing JSON file ${err.message}`),
       rawData => Buffer.from(rawData).toString()
     )
     .chain(_ => fromEither(parseJSON(_, () => new Error("Cannot parse JSON"))))
-    .chain(rawUsersCompanies => {
-      // tslint:disable-next-line: no-console
-      console.log(rawUsersCompanies);
-      return fromEither(UsersCompanies.decode(rawUsersCompanies)).mapLeft(
+    .chain(rawUsersCompanies =>
+      fromEither(UsersCompanies.decode(rawUsersCompanies)).mapLeft(
         errorsToError
-      );
-    });
+      )
+    );

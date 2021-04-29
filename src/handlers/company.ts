@@ -1,21 +1,34 @@
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
-import { identity } from "fp-ts/lib/function";
 import { taskEither } from "fp-ts/lib/TaskEither";
-import { fromEither, fromLeft } from "fp-ts/lib/TaskEither";
+import { fromLeft } from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import * as t from "io-ts";
 import { getCompanies } from "../services/companyService";
+import { Companies } from "../utils/json";
+import {
+  InternalServerErrorResponse,
+  NotFoundResponse,
+  toFastifyReply,
+  toInternalServerError,
+  toNotFoundResponse
+} from "../utils/response";
 
-const GetCompaniesBody = t.interface({
+export const GetCompaniesBody = t.interface({
   fiscalCode: FiscalCode
 });
 
-type GetCompaniesBody = t.TypeOf<typeof GetCompaniesBody>;
+export type GetCompaniesBody = t.TypeOf<typeof GetCompaniesBody>;
 
 export const getCompaniesHandler = async (
-  request: FastifyRequest<RouteGenericInterface, Server, IncomingMessage>,
+  request: FastifyRequest<
+    {
+      Body: GetCompaniesBody;
+    },
+    Server,
+    IncomingMessage
+  >,
   reply: FastifyReply<
     Server,
     IncomingMessage,
@@ -24,18 +37,15 @@ export const getCompaniesHandler = async (
     unknown
   >
 ) =>
-  fromEither(GetCompaniesBody.decode(request.body))
-    .mapLeft(() => reply.code(400).send("Bad Request"))
-    .chain(requestBody =>
-      getCompanies(requestBody.fiscalCode).mapLeft(err =>
-        reply.code(500).send({ error: err.message })
-      )
+  getCompanies(request.body.fiscalCode)
+    .mapLeft<InternalServerErrorResponse | NotFoundResponse>(
+      toInternalServerError
     )
-    .chain(maybeResults =>
+    .chain<Companies>(maybeResults =>
       maybeResults.foldL(
-        () => fromLeft(reply.code(404).send("FiscalCode Not Found")),
-        _ => taskEither.of(reply.code(200).send(_))
+        () => fromLeft(toNotFoundResponse("FiscalCode Not Found")),
+        _ => taskEither.of(_)
       )
     )
-    .fold(identity, identity)
+    .fold(toFastifyReply(reply), _ => reply.code(200).send(_))
     .run();
