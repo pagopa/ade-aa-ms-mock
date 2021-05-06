@@ -16,7 +16,10 @@
     "start": "node -r dotenv/config dist/server.js",
     "dev": "nodemon -r dotenv/config --inspect=0.0.0.0 dist/server.js",
     "postversion": "git push && git push --tags",
+    "dist:modules": "modclean -r -n default:safe && yarn install --production",
+    "predeploy": "npm-run-all build dist:modules",
     "test": "jest -i",
+    "test:coverage": "jest -i --coverage",
     "lint": "tslint --project ."
   },
   "devDependencies": {
