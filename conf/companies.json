@@ -1,11 +1,26 @@
 [
     { 
-        "fiscalCode": "DROLSS85S20H501F",
+        "fiscalCode": "ISPXNB32R82Y766D",
         "companies": [
             {
                 "fiscalCode": "00111111111",
                 "organizationName": "Test",
                 "pec": "aaa@prc.it"
+            },
+            {
+                "fiscalCode": "00111111121",
+                "organizationName": "Test 2",
+                "pec": "aaa2@pec.it"
+            }
+        ]
+    },
+    {
+        "fiscalCode": "GDNNWA12H81Y874F",
+        "companies": [
+            {
+                "fiscalCode": "00111111113",
+                "organizationName": "Test3",
+                "pec": "aaa3@pec.it"
             }
         ]
     }
