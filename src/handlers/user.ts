@@ -1,8 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
 import { IncomingMessage, Server, ServerResponse } from "http";
+import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { upsertUser } from "../services/userService";
-import { UserCompanies } from "../utils/json";
+
 import {
   InternalServerErrorResponse,
   NotFoundResponse,

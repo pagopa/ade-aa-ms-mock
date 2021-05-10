@@ -1,10 +1,6 @@
 import { fromPredicate, taskEither } from "fp-ts/lib/TaskEither";
-import {
-  parseUsers,
-  UserCompanies,
-  UsersCompanies,
-  writeUsers
-} from "../utils/json";
+import { UserCompanies } from "../../generated/definitions/UserCompanies";
+import { parseUsers, UsersCompanies, writeUsers } from "../utils/json";
 
 export const upsertUser = (userCompanies: UserCompanies) =>
   parseUsers()

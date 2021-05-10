@@ -1,12 +1,11 @@
-import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
 import { taskEither } from "fp-ts/lib/TaskEither";
 import { fromLeft } from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import * as t from "io-ts";
+import { Companies } from "../../generated/definitions/Companies";
+import { GetCompaniesBody } from "../../generated/definitions/GetCompaniesBody";
 import { getCompanies } from "../services/companyService";
-import { Companies } from "../utils/json";
 import {
   InternalServerErrorResponse,
   NotFoundResponse,
@@ -14,12 +13,6 @@ import {
   toInternalServerError,
   toNotFoundResponse
 } from "../utils/response";
-
-export const GetCompaniesBody = t.interface({
-  fiscalCode: FiscalCode
-});
-
-export type GetCompaniesBody = t.TypeOf<typeof GetCompaniesBody>;
 
 export const getCompaniesHandler = async (
   request: FastifyRequest<
