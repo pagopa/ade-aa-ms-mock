@@ -1,31 +1,9 @@
-import {
-  EmailString,
-  FiscalCode,
-  NonEmptyString,
-  OrganizationFiscalCode
-} from "@pagopa/ts-commons/lib/strings";
 import { parseJSON } from "fp-ts/lib/Either";
 import { fromEither, TaskEither, taskify } from "fp-ts/lib/TaskEither";
 import * as fs from "fs";
 import * as t from "io-ts";
+import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { errorsToError } from "./errorsFormatter";
-
-export const Companies = t.readonlyArray(
-  t.interface({
-    fiscalCode: OrganizationFiscalCode,
-    organizationName: NonEmptyString,
-    pec: EmailString
-  }),
-  "companies"
-);
-
-export type Companies = t.TypeOf<typeof Companies>;
-
-export const UserCompanies = t.interface({
-  companies: Companies,
-  fiscalCode: FiscalCode
-});
-export type UserCompanies = t.TypeOf<typeof UserCompanies>;
 
 export const UsersCompanies = t.readonlyArray(UserCompanies);
 

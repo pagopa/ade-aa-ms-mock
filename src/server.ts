@@ -1,11 +1,13 @@
 import { fastify, FastifyInstance } from "fastify";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import { GetCompaniesBody, getCompaniesHandler } from "./handlers/company";
+import { Companies } from "../generated/definitions/Companies";
+import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
+import { UserCompanies } from "../generated/definitions/UserCompanies";
+import { getCompaniesHandler } from "./handlers/company";
 import { upsertUserHandler } from "./handlers/user";
 import { withRequestMiddlewares } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { Companies, UserCompanies, UsersCompanies } from "./utils/json";
 
 const config = getConfigOrThrow();
 
