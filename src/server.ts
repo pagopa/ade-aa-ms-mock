@@ -1,10 +1,11 @@
 import { fastify, FastifyInstance } from "fastify";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { GetCompaniesBody, getCompaniesHandler } from "./handlers/company";
+import { upsertUserHandler } from "./handlers/user";
 import { withRequestMiddlewares } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { Companies } from "./utils/json";
+import { Companies, UserCompanies, UsersCompanies } from "./utils/json";
 
 const config = getConfigOrThrow();
 
@@ -18,7 +19,7 @@ const server: FastifyInstance<
 > = fastify({});
 
 server.post<{ Body: GetCompaniesBody; Response: Companies }>(
-  "/check",
+  "/companies",
   {
     preHandler: async (request, reply) =>
       withRequestMiddlewares(
@@ -28,6 +29,19 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
       )
   },
   getCompaniesHandler
+);
+
+server.post<{ Body: UserCompanies }>(
+  "/user",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        requiredBodyMiddleware(UserCompanies)
+      )
+  },
+  upsertUserHandler
 );
 
 server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {

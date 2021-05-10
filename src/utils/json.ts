@@ -21,16 +21,19 @@ export const Companies = t.readonlyArray(
 
 export type Companies = t.TypeOf<typeof Companies>;
 
-export const UsersCompanies = t.readonlyArray(
-  t.interface({
-    companies: Companies,
-    fiscalCode: FiscalCode
-  })
-);
+export const UserCompanies = t.interface({
+  companies: Companies,
+  fiscalCode: FiscalCode
+});
+export type UserCompanies = t.TypeOf<typeof UserCompanies>;
+
+export const UsersCompanies = t.readonlyArray(UserCompanies);
 
 export type UsersCompanies = t.TypeOf<typeof UsersCompanies>;
 
-const readFileAsync = taskify(fs.readFile);
+export const readFileAsync = taskify(fs.readFile);
+
+export const writeFileAsync = taskify(fs.writeFile);
 
 export const parseUsers = (): TaskEither<Error, UsersCompanies> =>
   readFileAsync("./conf/companies.json")
@@ -44,3 +47,9 @@ export const parseUsers = (): TaskEither<Error, UsersCompanies> =>
         errorsToError
       )
     );
+
+export const writeUsers = (usersCompanies: UsersCompanies) =>
+  writeFileAsync(
+    "./conf/companies.json",
+    JSON.stringify(usersCompanies, null, "\t")
+  ).map(() => true);
