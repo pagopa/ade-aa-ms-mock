@@ -23,5 +23,125 @@
 				"pec": "aaa@prc.it"
 			}
 		]
+	},
+	{
+		"fiscalCode": "VTLRSL13D21L702O",
+		"companies": [
+			{
+				"fiscalCode": "93215783471",
+				"organizationName": "Sorrentino Group",
+				"pec": "aaa@prc.it"
+			}
+		]
+	},
+	{
+		"fiscalCode": "GLLTTR04T71H614I",
+		"companies": [
+			{
+				"fiscalCode": "56409431308",
+				"organizationName": "Rizzi e figli",
+				"pec": "rinaldidiana@libero.it"
+			}
+		]
+	},
+	{
+		"fiscalCode": "DNTMLD13S03A069Z",
+		"companies": [
+			{
+				"fiscalCode": "62047484205",
+				"organizationName": "Riva, Caputo e Costantini Group",
+				"pec": "silvanomorelli@vodafone.it"
+			}
+		]
+	},	
+	{
+		"fiscalCode": "RSSMLD16C61B912Y",
+		"companies": [
+			{
+				"fiscalCode": "45789856407",
+				"organizationName": "Marino-Rizzo e figli",
+				"pec": "mneri@palumbo-rizzo.eu"
+			}
+		]
+	},	
+	{
+		"fiscalCode": "MNTLBN13S09I828X",
+		"companies": [
+			{
+				"fiscalCode": "13980026080",
+				"organizationName": "Grasso e figli",
+				"pec": "caputonaomi@virgilio.it"
+			}
+		]
+	},
+	{
+		"fiscalCode": "RVITTH83L60A580N",
+		"companies": [
+			{
+				"fiscalCode": "70074406611",
+				"organizationName": "Grassi s.r.l.",
+				"pec": "xconte@live.com"
+			}
+		]
+	},
+	{
+		"fiscalCode": "RVITTH83L60A580N",
+		"companies": [
+			{
+				"fiscalCode": "20756205211",
+				"organizationName": "Montanari Group",
+				"pec": "sandro76@colombo.com"
+			}
+		]
+	},
+	{
+		"fiscalCode": "SNTLNI72P45D247Q",
+		"companies": [
+			{
+				"fiscalCode": "84422880851",
+				"organizationName": "Montanari-Fiore s.r.l.",
+				"pec": "luce91@rinaldi.com"
+			}
+		]
+	},
+	{
+		"fiscalCode": "DMCPRM94T18G657F",
+		"companies": [
+			{
+				"fiscalCode": "53428933131",
+				"organizationName": "Montanari-Fiore s.r.l.",
+				"pec": "donatiartes@orlando.com"
+			}
+		]
+	},
+	{
+		"fiscalCode": "TSTRDY92R48L474C",
+		"companies": [
+			{
+				"fiscalCode": "14730998186",
+				"organizationName": "De Angelis-Basile SPA",
+				"pec": "emanuelsorrentino@live.com"
+			}
+		]
+	},
+	{
+		"fiscalCode": "DROLSS85S20H501F",
+		"companies": [
+			{
+				"fiscalCode": "68840215677",
+				"organizationName": "AleDore SPA",
+				"pec": "ale@dore.it"
+			}
+		]
+	},
+	{
+		"fiscalCode": "NakeAmenaKA9879",
+		"companies": [
+			{
+				"fiscalCode": "46123194515",
+				"organizationName": "MyCo",
+				"pec": "emanuelsorrentino@live.com"
+			}
+		]
 	}
 ]
