@@ -9,6 +9,7 @@ import {
   IntegerFromString,
   NonNegativeInteger
 } from "@pagopa/ts-commons/lib/numbers";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { fromNullable as fromNullableE } from "fp-ts/lib/Either";
 import { identity } from "fp-ts/lib/function";
 import * as t from "io-ts";
@@ -18,6 +19,10 @@ import { readableReport } from "italia-ts-commons/lib/reporters";
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.interface({
   isProduction: t.boolean,
+
+  BLOB_NAME: NonEmptyString,
+  CONTAINER_NAME: NonEmptyString,
+  STORAGE_CONNECTION_STRING: NonEmptyString,
 
   SERVER_PORT: NonNegativeInteger
 });

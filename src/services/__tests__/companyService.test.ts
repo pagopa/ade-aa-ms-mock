@@ -7,9 +7,12 @@ import {
 } from "@pagopa/ts-commons/lib/strings";
 import { isNone } from "fp-ts/lib/Option";
 import { fromLeft, taskEither } from "fp-ts/lib/TaskEither";
-import * as jsonUtil from "../../utils/json";
+import * as blobUtils from "../../utils/blob";
+import { UsersCompanies } from "../../utils/types";
 import { getCompanies } from "../companyService";
 
+const aContainername = "containerName" as NonEmptyString;
+const aBlobName = "blobName" as NonEmptyString;
 const aFiscalCode = "ISPXNB32R82Y766D" as FiscalCode;
 const anotherFiscalCode = "ISPXNB32R82Y766L" as FiscalCode;
 const anOrganizationFiscalCode = "00111111111" as OrganizationFiscalCode;
@@ -26,17 +29,17 @@ const aListOfUsersCompanies: ReadonlyArray<any> = [
     fiscalCode: aFiscalCode
   }
 ];
-const parseUsersMock = jest
+const getUsersCompaniesMock = jest
   .fn()
   .mockImplementation(() =>
-    taskEither.of<Error, jsonUtil.UsersCompanies>(aListOfUsersCompanies)
+    taskEither.of<Error, UsersCompanies>(aListOfUsersCompanies)
   );
 
-jest.spyOn(jsonUtil, "parseUsers").mockImplementation(parseUsersMock);
+jest.spyOn(blobUtils, "getBlobData").mockImplementation(getUsersCompaniesMock);
 
 describe("getCompanies", () => {
   it("should return a list of related companies for the given fiscalCode", async () => {
-    await getCompanies(aFiscalCode)
+    await getCompanies(aFiscalCode, {} as any, aContainername, aBlobName)
       .fold(
         _ => fail(),
         maybeValue =>
@@ -48,7 +51,7 @@ describe("getCompanies", () => {
       .run();
   });
   it("should return none if no company is found for the given fiscalCode", async () => {
-    await getCompanies(anotherFiscalCode)
+    await getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName)
       .fold(
         _ => fail(),
         maybeValue => expect(isNone(maybeValue)).toBeTruthy()
@@ -57,10 +60,10 @@ describe("getCompanies", () => {
   });
 
   it("should return an error if companies parsing raise an Error", async () => {
-    parseUsersMock.mockImplementationOnce(() =>
+    getUsersCompaniesMock.mockImplementationOnce(() =>
       fromLeft(new Error("Cannot Parse JSON"))
     );
-    await getCompanies(anotherFiscalCode)
+    await getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName)
       .fold(
         _ => expect(_.message).toEqual("Cannot Parse JSON"),
         () => fail()

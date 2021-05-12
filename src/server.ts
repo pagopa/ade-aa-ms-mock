@@ -1,3 +1,4 @@
+import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance } from "fastify";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { Companies } from "../generated/definitions/Companies";
@@ -20,6 +21,10 @@ const server: FastifyInstance<
   ServerResponse
 > = fastify({});
 
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  config.STORAGE_CONNECTION_STRING
+);
+
 server.post<{ Body: GetCompaniesBody; Response: Companies }>(
   "/companies",
   {
@@ -30,7 +35,11 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         requiredBodyMiddleware(GetCompaniesBody)
       )
   },
-  getCompaniesHandler
+  getCompaniesHandler(
+    blobServiceClient,
+    config.CONTAINER_NAME,
+    config.BLOB_NAME
+  )
 );
 
 server.post<{ Body: UserCompanies }>(
@@ -43,7 +52,7 @@ server.post<{ Body: UserCompanies }>(
         requiredBodyMiddleware(UserCompanies)
       )
   },
-  upsertUserHandler
+  upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
 );
 
 server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {

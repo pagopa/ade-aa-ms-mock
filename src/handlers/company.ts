@@ -1,8 +1,10 @@
+import { BlobServiceClient } from "@azure/storage-blob";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
 import { taskEither } from "fp-ts/lib/TaskEither";
 import { fromLeft } from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { Companies } from "../../generated/definitions/Companies";
 import { GetCompaniesBody } from "../../generated/definitions/GetCompaniesBody";
 import { getCompanies } from "../services/companyService";
@@ -14,7 +16,11 @@ import {
   toNotFoundResponse
 } from "../utils/response";
 
-export const getCompaniesHandler = async (
+export const getCompaniesHandler = (
+  blobServiceClient: BlobServiceClient,
+  containerName: NonEmptyString,
+  blobName: NonEmptyString
+) => async (
   request: FastifyRequest<
     {
       Body: GetCompaniesBody;
@@ -30,7 +36,12 @@ export const getCompaniesHandler = async (
     unknown
   >
 ) =>
-  getCompanies(request.body.fiscalCode)
+  getCompanies(
+    request.body.fiscalCode,
+    blobServiceClient,
+    containerName,
+    blobName
+  )
     .mapLeft<InternalServerErrorResponse | NotFoundResponse>(
       toInternalServerError
     )

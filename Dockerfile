@@ -8,6 +8,7 @@ COPY /src /usr/src/app/src
 COPY /package.json /usr/src/app/package.json
 COPY /tsconfig.json /usr/src/app/tsconfig.json
 COPY /yarn.lock /usr/src/app/yarn.lock
+COPY /openapi /usr/src/app/openapi
 
 RUN sudo chmod -R 777 /usr/src/app \
   && yarn install \
@@ -21,6 +22,7 @@ WORKDIR /usr/src/app
 COPY /package.json /usr/src/app/package.json
 COPY --from=builder /usr/src/app/dist /usr/src/app/dist
 COPY --from=builder /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --from=builder /usr/src/app/openapi /usr/src/app/openapi
 
 EXPOSE 3000
 

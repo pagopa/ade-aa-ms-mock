@@ -19,3 +19,22 @@ services:
         command: ["yarn", "start"]
         volumes:
             - ".:/usr/src/app:cached"
+        networks:
+            - ade-net
+    
+    storage:
+        image: azurite
+        build:
+            context: ./
+            dockerfile: docker/azurite/Dockerfile
+        ports:
+            - "10000:10000"
+            - "10001:10001"
+            - "10002:10002"
+        networks:
+            - ade-net
+networks:
+    ade-net:
+        driver: bridge
+        driver_opts:
+            com.docker.network.driver.mtu: 1450
