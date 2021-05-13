@@ -1,3 +1,5 @@
+import { BlobServiceClient } from "@azure/storage-blob";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
 import { IncomingMessage, Server, ServerResponse } from "http";
@@ -11,7 +13,11 @@ import {
   toInternalServerError
 } from "../utils/response";
 
-export const upsertUserHandler = async (
+export const upsertUserHandler = (
+  blobServiceClient: BlobServiceClient,
+  containerName: NonEmptyString,
+  blobName: NonEmptyString
+) => async (
   request: FastifyRequest<
     {
       Body: UserCompanies;
@@ -27,7 +33,7 @@ export const upsertUserHandler = async (
     unknown
   >
 ) =>
-  upsertUser(request.body)
+  upsertUser(request.body, blobServiceClient, containerName, blobName)
     .mapLeft<InternalServerErrorResponse | NotFoundResponse>(
       toInternalServerError
     )

@@ -1,3 +1,4 @@
+import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance } from "fastify";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { Companies } from "../generated/definitions/Companies";
@@ -8,6 +9,7 @@ import { upsertUserHandler } from "./handlers/user";
 import { withRequestMiddlewares } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
+import { initializeCompaniesBlob } from "./utils/startup";
 
 const config = getConfigOrThrow();
 
@@ -20,6 +22,23 @@ const server: FastifyInstance<
   ServerResponse
 > = fastify({});
 
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  config.STORAGE_CONNECTION_STRING
+);
+
+if (!config.isProduction) {
+  initializeCompaniesBlob(
+    blobServiceClient,
+    config.CONTAINER_NAME,
+    config.BLOB_NAME
+  )
+    .run()
+    // tslint:disable-next-line: no-console
+    .then(() => console.log("Test Blob initialized"))
+    // tslint:disable-next-line: no-console
+    .catch(console.log);
+}
+
 server.post<{ Body: GetCompaniesBody; Response: Companies }>(
   "/companies",
   {
@@ -30,7 +49,11 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         requiredBodyMiddleware(GetCompaniesBody)
       )
   },
-  getCompaniesHandler
+  getCompaniesHandler(
+    blobServiceClient,
+    config.CONTAINER_NAME,
+    config.BLOB_NAME
+  )
 );
 
 server.post<{ Body: UserCompanies }>(
@@ -43,7 +66,7 @@ server.post<{ Body: UserCompanies }>(
         requiredBodyMiddleware(UserCompanies)
       )
   },
-  upsertUserHandler
+  upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
 );
 
 server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {
