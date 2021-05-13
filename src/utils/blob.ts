@@ -49,7 +49,7 @@ export const getBlobData = <S, A>(
   )
     .map(buffer => buffer.toString("utf-8"))
     .chain(rawJson =>
-      fromEither(
-        parseJSON(rawJson, () => new Error("Cannot parse Json Blob"))
-      ).chain(_ => fromEither(type.decode(_)).mapLeft(errorsToError))
+      fromEither(parseJSON(rawJson, toError)).chain(_ =>
+        fromEither(type.decode(_)).mapLeft(errorsToError)
+      )
     );
