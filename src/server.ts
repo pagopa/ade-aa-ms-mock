@@ -9,6 +9,7 @@ import { upsertUserHandler } from "./handlers/user";
 import { withRequestMiddlewares } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
+import { initializeCompaniesBlob } from "./utils/startup";
 
 const config = getConfigOrThrow();
 
@@ -24,6 +25,19 @@ const server: FastifyInstance<
 const blobServiceClient = BlobServiceClient.fromConnectionString(
   config.STORAGE_CONNECTION_STRING
 );
+
+if (!config.isProduction) {
+  initializeCompaniesBlob(
+    blobServiceClient,
+    config.CONTAINER_NAME,
+    config.BLOB_NAME
+  )
+    .run()
+    // tslint:disable-next-line: no-console
+    .then(() => console.log("Test Blob initialized"))
+    // tslint:disable-next-line: no-console
+    .catch(console.log);
+}
 
 server.post<{ Body: GetCompaniesBody; Response: Companies }>(
   "/companies",
