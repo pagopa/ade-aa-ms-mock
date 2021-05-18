@@ -1,5 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance } from "fastify";
+import { taskEither } from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
@@ -67,6 +68,10 @@ server.post<{ Body: UserCompanies }>(
       )
   },
   upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
+);
+
+server.get("/ping", {}, (_, reply) =>
+  taskEither.of(reply.code(200).send("OK")).run()
 );
 
 server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {
