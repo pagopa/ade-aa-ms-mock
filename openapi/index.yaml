@@ -56,7 +56,7 @@ paths:
             $ref: "#/definitions/ProblemJson"
 
   "/ping":
-    post:
+    get:
       operationId: ping
       summary: |
         Ping
