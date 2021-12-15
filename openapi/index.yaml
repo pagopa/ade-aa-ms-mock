@@ -78,8 +78,6 @@ produces:
 definitions:
   FiscalCode:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/FiscalCode"
-  OrganizationFiscalCode:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/OrganizationFiscalCode"
   ProblemJson:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/ProblemJson"
   EmailAddress:
@@ -89,7 +87,9 @@ definitions:
     type: object
     properties:   
       fiscalCode: 
-        $ref: "#/definitions/OrganizationFiscalCode"
+        type: string
+        minLength: 8
+        maxLength: 16
       organizationName:
         type: string
         minLength: 1
