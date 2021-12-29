@@ -33,7 +33,7 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
   SERVER_PORT: fromNullableE(-1)(process.env.SERVER_PORT)
     .chain(_ => IntegerFromString.decode(_).mapLeft(() => -1))
     .fold(identity, identity),
-  isProduction: process.env.NODE_ENV === "prod"
+  isProduction: process.env.NODE_ENV === "production"
 });
 
 /**
