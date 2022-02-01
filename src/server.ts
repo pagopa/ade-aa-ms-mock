@@ -1,6 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance } from "fastify";
-import { taskEither } from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
@@ -32,8 +32,7 @@ if (!config.isProduction) {
     blobServiceClient,
     config.CONTAINER_NAME,
     config.BLOB_NAME
-  )
-    .run()
+  )()
     // tslint:disable-next-line: no-console
     .then(() => console.log("Test Blob initialized"))
     // tslint:disable-next-line: no-console
@@ -48,7 +47,7 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         request,
         reply,
         requiredBodyMiddleware(GetCompaniesBody)
-      )
+      ),
   },
   getCompaniesHandler(
     blobServiceClient,
@@ -65,14 +64,12 @@ server.post<{ Body: UserCompanies }>(
         request,
         reply,
         requiredBodyMiddleware(UserCompanies)
-      )
+      ),
   },
   upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
 );
 
-server.get("/ping", {}, (_, reply) =>
-  taskEither.of(reply.code(200).send("OK")).run()
-);
+server.get("/ping", {}, (_, reply) => TE.of(reply.code(200).send("OK"))());
 
 server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {
   if (err) {

@@ -1,6 +1,7 @@
 import { FastifyReply } from "fastify/types/reply";
 import { FastifyRequest } from "fastify/types/request";
-import { TaskEither } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { Response } from "../utils/response";
 
 export const withRequestMiddlewares = (
@@ -9,14 +10,16 @@ export const withRequestMiddlewares = (
   M1: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>
+  ) => TE.TaskEither<Response, unknown>
 ) =>
-  M1(request, reply)
-    .fold(
-      _ => reply.code(_.code).send(_),
+  pipe(
+    M1(request, reply),
+    TE.bimap(
+      (_) => reply.code(_.code).send(_),
       () => void 0
-    )
-    .run();
+    ),
+    TE.toUnion
+  )();
 
 export const withDoubleRequestMiddlewares = (
   request: FastifyRequest,
@@ -24,19 +27,21 @@ export const withDoubleRequestMiddlewares = (
   M1: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>,
+  ) => TE.TaskEither<Response, unknown>,
   M2: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>
+  ) => TE.TaskEither<Response, unknown>
 ) =>
-  M1(request, reply)
-    .chain(() => M2(request, reply))
-    .fold(
-      _ => reply.code(_.code).send(_),
+  pipe(
+    M1(request, reply),
+    TE.chain(() => M2(request, reply)),
+    TE.bimap(
+      (_) => reply.code(_.code).send(_),
       () => void 0
-    )
-    .run();
+    ),
+    TE.toUnion
+  )();
 
 export const withTripleRequestMiddlewares = (
   request: FastifyRequest,
@@ -44,18 +49,20 @@ export const withTripleRequestMiddlewares = (
   M1: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>,
+  ) => TE.TaskEither<Response, unknown>,
   M2: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>,
+  ) => TE.TaskEither<Response, unknown>,
   M3: (
     request: FastifyRequest,
     reply: FastifyReply
-  ) => TaskEither<Response, unknown>
+  ) => TE.TaskEither<Response, unknown>
 ) =>
-  M1(request, reply)
-    .chain(() => M2(request, reply))
-    .chain(() => M3(request, reply))
-    .fold(_ => reply.code(_.code).send(_), void 0)
-    .run();
+  pipe(
+    M1(request, reply),
+    TE.chain(() => M2(request, reply)),
+    TE.chain(() => M3(request, reply)),
+    TE.bimap((_) => reply.code(_.code).send(_), void 0),
+    TE.toUnion
+  )();

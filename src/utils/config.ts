@@ -7,13 +7,13 @@
 
 import {
   IntegerFromString,
-  NonNegativeInteger
+  NonNegativeInteger,
 } from "@pagopa/ts-commons/lib/numbers";
+import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { fromNullable as fromNullableE } from "fp-ts/lib/Either";
-import { identity } from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
+import { flow, identity, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
-import { readableReport } from "italia-ts-commons/lib/reporters";
 
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
@@ -24,16 +24,24 @@ export const IConfig = t.interface({
   CONTAINER_NAME: NonEmptyString,
   STORAGE_CONNECTION_STRING: NonEmptyString,
 
-  SERVER_PORT: NonNegativeInteger
+  SERVER_PORT: NonNegativeInteger,
 });
 
 // No need to re-evaluate this object for each call
 const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
   ...process.env,
-  SERVER_PORT: fromNullableE(-1)(process.env.SERVER_PORT)
-    .chain(_ => IntegerFromString.decode(_).mapLeft(() => -1))
-    .fold(identity, identity),
-  isProduction: process.env.NODE_ENV === "production"
+  SERVER_PORT: pipe(
+    process.env.SERVER_PORT,
+    E.fromNullable(-1),
+    E.chain(
+      flow(
+        IntegerFromString.decode,
+        E.mapLeft(() => -1)
+      )
+    ),
+    E.toUnion
+  ),
+  isProduction: process.env.NODE_ENV === "production",
 });
 
 /**
@@ -54,7 +62,10 @@ export function getConfig(): t.Validation<IConfig> {
  * @throws validation errors found while parsing the application configuration
  */
 export function getConfigOrThrow(): IConfig {
-  return errorOrConfig.getOrElseL(errors => {
-    throw new Error(`Invalid configuration: ${readableReport(errors)}`);
-  });
+  return pipe(
+    errorOrConfig,
+    E.getOrElseW((errors) => {
+      throw new Error(`Invalid configuration: ${readableReport(errors)}`);
+    })
+  );
 }
