@@ -47,7 +47,7 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         request,
         reply,
         requiredBodyMiddleware(GetCompaniesBody)
-      ),
+      )
   },
   getCompaniesHandler(
     blobServiceClient,
@@ -64,7 +64,7 @@ server.post<{ Body: UserCompanies }>(
         request,
         reply,
         requiredBodyMiddleware(UserCompanies)
-      ),
+      )
   },
   upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
 );

@@ -1,6 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { parseJSON, toError } from "fp-ts/lib/Either";
+import { toError } from "fp-ts/lib/Either";
 import { flow, pipe } from "fp-ts/lib/function";
 import { parse } from "fp-ts/lib/Json";
 import * as TE from "fp-ts/lib/TaskEither";
@@ -15,8 +15,8 @@ export const parseUsers = (): TE.TaskEither<Error, UsersCompanies> =>
   pipe(
     readFileAsync("./conf/companies.json"),
     TE.bimap(
-      (err) => new Error(`Error parsing JSON file ${err.message}`),
-      (rawData) => Buffer.from(rawData).toString()
+      err => new Error(`Error parsing JSON file ${err.message}`),
+      rawData => Buffer.from(rawData).toString()
     ),
     TE.chain(
       flow(
@@ -42,7 +42,7 @@ export const initializeCompaniesBlob = (
       toError
     ),
     TE.chain(() => parseUsers()),
-    TE.chain((_) =>
+    TE.chain(_ =>
       upsertBlob(
         blobServiceClient,
         containerName,

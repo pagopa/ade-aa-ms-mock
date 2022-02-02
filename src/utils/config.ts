@@ -7,12 +7,12 @@
 
 import {
   IntegerFromString,
-  NonNegativeInteger,
+  NonNegativeInteger
 } from "@pagopa/ts-commons/lib/numbers";
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as E from "fp-ts/lib/Either";
-import { flow, identity, pipe } from "fp-ts/lib/function";
+import { flow, pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 // global app configuration
@@ -24,7 +24,7 @@ export const IConfig = t.interface({
   CONTAINER_NAME: NonEmptyString,
   STORAGE_CONNECTION_STRING: NonEmptyString,
 
-  SERVER_PORT: NonNegativeInteger,
+  SERVER_PORT: NonNegativeInteger
 });
 
 // No need to re-evaluate this object for each call
@@ -41,7 +41,7 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
     ),
     E.toUnion
   ),
-  isProduction: process.env.NODE_ENV === "production",
+  isProduction: process.env.NODE_ENV === "production"
 });
 
 /**
@@ -64,7 +64,7 @@ export function getConfig(): t.Validation<IConfig> {
 export function getConfigOrThrow(): IConfig {
   return pipe(
     errorOrConfig,
-    E.getOrElseW((errors) => {
+    E.getOrElseW(errors => {
       throw new Error(`Invalid configuration: ${readableReport(errors)}`);
     })
   );

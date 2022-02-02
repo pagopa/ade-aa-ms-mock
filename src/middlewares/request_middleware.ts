@@ -15,7 +15,7 @@ export const withRequestMiddlewares = (
   pipe(
     M1(request, reply),
     TE.bimap(
-      (_) => reply.code(_.code).send(_),
+      _ => reply.code(_.code).send(_),
       () => void 0
     ),
     TE.toUnion
@@ -37,7 +37,7 @@ export const withDoubleRequestMiddlewares = (
     M1(request, reply),
     TE.chain(() => M2(request, reply)),
     TE.bimap(
-      (_) => reply.code(_.code).send(_),
+      _ => reply.code(_.code).send(_),
       () => void 0
     ),
     TE.toUnion
@@ -63,6 +63,6 @@ export const withTripleRequestMiddlewares = (
     M1(request, reply),
     TE.chain(() => M2(request, reply)),
     TE.chain(() => M3(request, reply)),
-    TE.bimap((_) => reply.code(_.code).send(_), void 0),
+    TE.bimap(_ => reply.code(_.code).send(_), void 0),
     TE.toUnion
   )();

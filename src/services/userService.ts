@@ -1,6 +1,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
-import { fromPredicate, taskEither } from "fp-ts/lib/TaskEither";
+import { flow, pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { getBlobData, upsertBlob } from "../utils/blob";
 import { UsersCompanies } from "../utils/types";
@@ -11,28 +12,30 @@ export const upsertUser = (
   containerName: NonEmptyString,
   blobName: NonEmptyString
 ) =>
-  getBlobData(blobServiceClient, containerName, blobName, UsersCompanies)
-    .chain(users =>
-      fromPredicate(
-        (usersCompanies: UsersCompanies) =>
-          usersCompanies.find(
-            u => u.fiscalCode === userCompanies.fiscalCode
-          ) !== undefined,
-        _ => [..._, userCompanies]
-      )(users).foldTaskEither<Error, UsersCompanies>(
-        _ => taskEither.of(_),
-        _ =>
-          taskEither.of([
-            ..._.filter(e => e.fiscalCode !== userCompanies.fiscalCode),
-            userCompanies
-          ])
+  pipe(
+    getBlobData(blobServiceClient, containerName, blobName, UsersCompanies),
+    TE.chain(
+      flow(
+        TE.fromPredicate(
+          (usersCompanies: UsersCompanies) =>
+            usersCompanies.find(
+              u => u.fiscalCode === userCompanies.fiscalCode
+            ) !== undefined,
+          _ => [..._, userCompanies]
+        ),
+        TE.map(_ => [
+          ..._.filter(e => e.fiscalCode !== userCompanies.fiscalCode),
+          userCompanies
+        ]),
+        TE.orElse(_ => TE.of(_))
       )
-    )
-    .chain(_ =>
+    ),
+    TE.chain(_ =>
       upsertBlob(
         blobServiceClient,
         containerName,
         blobName,
         JSON.stringify(_, null, "\t")
       )
-    );
+    )
+  );

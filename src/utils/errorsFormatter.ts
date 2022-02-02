@@ -14,9 +14,7 @@ export function multipleErrorsFormatter(
   context: string
 ): Error {
   return new Error(
-    errors
-      .map((_) => `value [${_.message}]`)
-      .join(` at [context: ${context}]\n`)
+    errors.map(_ => `value [${_.message}]`).join(` at [context: ${context}]\n`)
   );
 }
 

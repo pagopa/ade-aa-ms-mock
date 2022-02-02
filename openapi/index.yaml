@@ -77,11 +77,11 @@ produces:
 
 definitions:
   FiscalCode:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/FiscalCode"
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/FiscalCode"
   ProblemJson:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/ProblemJson"
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/ProblemJson"
   EmailAddress:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v17.3.0/openapi/definitions.yaml#/EmailAddress"
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/EmailAddress"
 
   Company: 
     type: object

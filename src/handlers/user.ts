@@ -8,12 +8,7 @@ import { IncomingMessage, Server, ServerResponse } from "http";
 import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { upsertUser } from "../services/userService";
 
-import {
-  InternalServerErrorResponse,
-  NotFoundResponse,
-  toFastifyReply,
-  toInternalServerError,
-} from "../utils/response";
+import { toFastifyReply, toInternalServerError } from "../utils/response";
 
 export const upsertUserHandler = (
   blobServiceClient: BlobServiceClient,
@@ -38,8 +33,6 @@ export const upsertUserHandler = (
   pipe(
     upsertUser(request.body, blobServiceClient, containerName, blobName),
     TE.mapLeft(toInternalServerError),
-    TE.bimap(toFastifyReply(reply), (_) =>
-      reply.code(200).send({ upserted: _ })
-    ),
+    TE.bimap(toFastifyReply(reply), _ => reply.code(200).send({ upserted: _ })),
     TE.toUnion
   )();

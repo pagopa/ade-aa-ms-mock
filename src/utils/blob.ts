@@ -22,10 +22,10 @@ export const upsertBlob = (
           .upload(content, content.length),
       E.toError
     ),
-    TE.map((_) => _._response),
+    TE.map(_ => _._response),
     TE.chain(
       TE.fromPredicate(
-        (response) => response.status >= 200 && response.status < 300,
+        response => response.status >= 200 && response.status < 300,
         () => new Error("Cannot upload content data to Blob")
       )
     ),
@@ -47,7 +47,7 @@ export const getBlobData = <S, A>(
           .downloadToBuffer(),
       E.toError
     ),
-    TE.map((buffer) => buffer.toString("utf-8")),
+    TE.map(buffer => buffer.toString("utf-8")),
     TE.chain(
       flow(
         parse,

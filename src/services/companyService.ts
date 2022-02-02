@@ -14,11 +14,11 @@ export const getCompanies = (
 ) =>
   pipe(
     getBlobData(blobServiceClient, containerName, blobName, UsersCompanies),
-    TE.map((_) => _.find((elem) => elem.fiscalCode === fiscalCode)),
+    TE.map(_ => _.find(elem => elem.fiscalCode === fiscalCode)),
     TE.map(
       flow(
         O.fromNullable,
-        O.map((_) => _.companies)
+        O.map(_ => _.companies)
       )
     )
   );

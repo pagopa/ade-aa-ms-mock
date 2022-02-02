@@ -11,7 +11,7 @@ import { getCompanies } from "../services/companyService";
 import {
   toFastifyReply,
   toInternalServerError,
-  toNotFoundResponse,
+  toNotFoundResponse
 } from "../utils/response";
 
 export const getCompaniesHandler = (
@@ -45,7 +45,7 @@ export const getCompaniesHandler = (
     TE.chainW(
       O.fold(
         () => TE.left(toNotFoundResponse("FiscalCode Not Found")),
-        (_) => TE.of(_)
+        _ => TE.of(_)
       )
     ),
     TE.bimap(toFastifyReply(reply), reply.code(200).send),
