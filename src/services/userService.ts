@@ -1,6 +1,8 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import * as A from "fp-ts/lib/Array";
 import { flow, pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
 import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { getBlobData, upsertBlob } from "../utils/blob";
@@ -17,17 +19,21 @@ export const upsertUser = (
     TE.chain(
       flow(
         TE.fromPredicate(
-          (usersCompanies: UsersCompanies) =>
-            usersCompanies.find(
-              u => u.fiscalCode === userCompanies.fiscalCode
-            ) !== undefined,
-          _ => [..._, userCompanies]
+          flow(
+            A.findFirst(
+              element => element.fiscalCode === userCompanies.fiscalCode
+            ),
+            O.isSome
+          ),
+          previousUsersCompanies => [...previousUsersCompanies, userCompanies]
         ),
-        TE.map(_ => [
-          ..._.filter(e => e.fiscalCode !== userCompanies.fiscalCode),
+        TE.map(usersCompanies => [
+          ...usersCompanies.filter(
+            e => e.fiscalCode !== userCompanies.fiscalCode
+          ),
           userCompanies
         ]),
-        TE.orElse(_ => TE.of(_))
+        TE.orElse(TE.of)
       )
     ),
     TE.chain(_ =>

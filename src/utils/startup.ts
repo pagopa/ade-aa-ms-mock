@@ -18,13 +18,8 @@ export const parseUsers = (): TE.TaskEither<Error, UsersCompanies> =>
       err => new Error(`Error parsing JSON file ${err.message}`),
       rawData => Buffer.from(rawData).toString()
     ),
-    TE.chain(
-      flow(
-        parse,
-        TE.fromEither,
-        TE.mapLeft(() => new Error("Cannot parse JSON"))
-      )
-    ),
+    TE.chainEitherKW(parse),
+    TE.mapLeft(() => new Error("Cannot parse JSON")),
     TE.chain(
       flow(UsersCompanies.decode, TE.fromEither, TE.mapLeft(errorsToError))
     )
@@ -42,12 +37,12 @@ export const initializeCompaniesBlob = (
       toError
     ),
     TE.chain(() => parseUsers()),
-    TE.chain(_ =>
+    TE.chain(usersCompanies =>
       upsertBlob(
         blobServiceClient,
         containerName,
         blobName,
-        JSON.stringify(_, null, "\t")
+        JSON.stringify(usersCompanies, null, "\t")
       )
     )
   );
