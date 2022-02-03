@@ -12,7 +12,7 @@ import {
 import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as E from "fp-ts/lib/Either";
-import { flow, pipe } from "fp-ts/lib/function";
+import { pipe } from "fp-ts/lib/function";
 import * as t from "io-ts";
 
 // global app configuration
@@ -32,14 +32,8 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
   ...process.env,
   SERVER_PORT: pipe(
     process.env.SERVER_PORT,
-    E.fromNullable(-1),
-    E.chain(
-      flow(
-        IntegerFromString.decode,
-        E.mapLeft(() => -1)
-      )
-    ),
-    E.toUnion
+    IntegerFromString.decode,
+    E.getOrElse(() => -1)
   ),
   isProduction: process.env.NODE_ENV === "production"
 });

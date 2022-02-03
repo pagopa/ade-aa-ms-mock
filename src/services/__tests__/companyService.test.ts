@@ -1,4 +1,3 @@
-// tslint:disable: no-any
 import {
   EmailString,
   FiscalCode,
@@ -9,7 +8,6 @@ import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as blobUtils from "../../utils/blob";
-import { UsersCompanies } from "../../utils/types";
 import { getCompanies } from "../companyService";
 
 const aContainername = "containerName" as NonEmptyString;

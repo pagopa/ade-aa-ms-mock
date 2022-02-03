@@ -22,12 +22,10 @@ export const upsertBlob = (
           .upload(content, content.length),
       E.toError
     ),
-    TE.map(_ => _._response),
-    TE.chain(
-      TE.fromPredicate(
-        response => response.status >= 200 && response.status < 300,
-        () => new Error("Cannot upload content data to Blob")
-      )
+    TE.map(uploadResponse => uploadResponse._response),
+    TE.filterOrElse(
+      response => response.status >= 200 && response.status < 300,
+      () => new Error("Cannot upload content data to Blob")
     ),
     TE.map(() => true)
   );

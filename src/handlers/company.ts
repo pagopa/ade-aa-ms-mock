@@ -3,7 +3,6 @@ import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
 import { pipe } from "fp-ts/lib/function";
-import * as O from "fp-ts/lib/Option";
 import * as TE from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { GetCompaniesBody } from "../../generated/definitions/GetCompaniesBody";
@@ -42,12 +41,7 @@ export const getCompaniesHandler = (
       blobName
     ),
     TE.mapLeft(toInternalServerError),
-    TE.chainW(
-      O.fold(
-        () => TE.left(toNotFoundResponse("FiscalCode Not Found")),
-        _ => TE.of(_)
-      )
-    ),
+    TE.chainW(TE.fromOption(() => toNotFoundResponse("FiscalCode Not Found"))),
     TE.bimap(toFastifyReply(reply), reply.code(200).send),
     TE.toUnion
-  );
+  )();
