@@ -54,6 +54,26 @@ paths:
           description: Service unavailable.
           schema:
             $ref: "#/definitions/ProblemJson"
+    delete:
+      operationId: deleteUser
+      summary: |
+        Delete a User
+      description: |
+        Delete a user with his related companies
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: "#/definitions/GetCompaniesBody"
+      responses:
+        "200":
+            description: Deleted.
+        "404":
+            description: User not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
 
   "/ping":
     get:
