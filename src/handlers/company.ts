@@ -1,16 +1,13 @@
 import { BlobServiceClient } from "@azure/storage-blob";
+import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
-import { taskEither } from "fp-ts/lib/TaskEither";
-import { fromLeft } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
-import { Companies } from "../../generated/definitions/Companies";
 import { GetCompaniesBody } from "../../generated/definitions/GetCompaniesBody";
 import { getCompanies } from "../services/companyService";
 import {
-  InternalServerErrorResponse,
-  NotFoundResponse,
   toFastifyReply,
   toInternalServerError,
   toNotFoundResponse
@@ -36,20 +33,15 @@ export const getCompaniesHandler = (
     unknown
   >
 ) =>
-  getCompanies(
-    request.body.fiscalCode,
-    blobServiceClient,
-    containerName,
-    blobName
-  )
-    .mapLeft<InternalServerErrorResponse | NotFoundResponse>(
-      toInternalServerError
-    )
-    .chain<Companies>(maybeResults =>
-      maybeResults.foldL(
-        () => fromLeft(toNotFoundResponse("FiscalCode Not Found")),
-        _ => taskEither.of(_)
-      )
-    )
-    .fold(toFastifyReply(reply), _ => reply.code(200).send(_))
-    .run();
+  pipe(
+    getCompanies(
+      request.body.fiscalCode,
+      blobServiceClient,
+      containerName,
+      blobName
+    ),
+    TE.mapLeft(toInternalServerError),
+    TE.chainW(TE.fromOption(() => toNotFoundResponse("FiscalCode Not Found"))),
+    TE.bimap(toFastifyReply(reply), reply.code(200).send),
+    TE.toUnion
+  )();

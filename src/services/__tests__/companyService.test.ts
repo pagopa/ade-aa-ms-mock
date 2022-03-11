@@ -1,14 +1,13 @@
-// tslint:disable: no-any
 import {
   EmailString,
   FiscalCode,
   NonEmptyString,
   OrganizationFiscalCode
 } from "@pagopa/ts-commons/lib/strings";
-import { isNone } from "fp-ts/lib/Option";
-import { fromLeft, taskEither } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
+import * as TE from "fp-ts/lib/TaskEither";
 import * as blobUtils from "../../utils/blob";
-import { UsersCompanies } from "../../utils/types";
 import { getCompanies } from "../companyService";
 
 const aContainername = "containerName" as NonEmptyString;
@@ -31,43 +30,43 @@ const aListOfUsersCompanies: ReadonlyArray<any> = [
 ];
 const getUsersCompaniesMock = jest
   .fn()
-  .mockImplementation(() =>
-    taskEither.of<Error, UsersCompanies>(aListOfUsersCompanies)
-  );
+  .mockImplementation(() => TE.of(aListOfUsersCompanies));
 
 jest.spyOn(blobUtils, "getBlobData").mockImplementation(getUsersCompaniesMock);
 
 describe("getCompanies", () => {
   it("should return a list of related companies for the given fiscalCode", async () => {
-    await getCompanies(aFiscalCode, {} as any, aContainername, aBlobName)
-      .fold(
+    await pipe(
+      getCompanies(aFiscalCode, {} as any, aContainername, aBlobName),
+      TE.bimap(
         _ => fail(),
-        maybeValue =>
-          maybeValue.foldL(
-            () => fail(),
-            _ => expect(_).toEqual(aListOfCompanies)
-          )
+        O.fold(
+          () => fail(),
+          _ => expect(_).toEqual(aListOfCompanies)
+        )
       )
-      .run();
+    )();
   });
   it("should return none if no company is found for the given fiscalCode", async () => {
-    await getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName)
-      .fold(
+    await pipe(
+      getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName),
+      TE.bimap(
         _ => fail(),
-        maybeValue => expect(isNone(maybeValue)).toBeTruthy()
+        maybeValue => expect(O.isNone(maybeValue)).toBeTruthy()
       )
-      .run();
+    )();
   });
 
   it("should return an error if companies parsing raise an Error", async () => {
     getUsersCompaniesMock.mockImplementationOnce(() =>
-      fromLeft(new Error("Cannot Parse JSON"))
+      TE.left(new Error("Cannot Parse JSON"))
     );
-    await getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName)
-      .fold(
+    await pipe(
+      getCompanies(anotherFiscalCode, {} as any, aContainername, aBlobName),
+      TE.bimap(
         _ => expect(_.message).toEqual("Cannot Parse JSON"),
         () => fail()
       )
-      .run();
+    )();
   });
 });
