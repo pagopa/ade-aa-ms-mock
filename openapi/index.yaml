@@ -11,6 +11,131 @@ host: api.cd.italia.it
 schemes:
   - https
 paths:
+  "/organizations":
+    get:
+      operationId: getOrganizations
+      summary: Get organizations
+      description: Get all organizations
+      parameters:
+        - $ref: "#/parameters/QueryOrganizationName"
+        - $ref: "#/parameters/QueryOrganizationFiscalCode"
+        - $ref: "#/parameters/PageNumber"
+        - $ref: "#/parameters/PageSize"
+      responses:
+        "200":
+          description: List of organizations.
+          schema:
+            $ref: "#/definitions/Organizations"
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    post:
+      operationId: upsertOrganization
+      summary: Upsert organization.
+      description: Update or insert an organization.
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: "#/definitions/OrganizationWithReferents"
+      responses:
+        "200":
+          description: Upserted organization.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+
+  "/organization/{organizationFiscalCode}":
+    get:
+      operationId: getOrganization
+      summary: Get organization
+      description: Get an organization by fiscal code
+      parameters:
+        - $ref: "#/parameters/OrganizationFiscalCode"
+      responses:
+        "200":
+          description: An organization with referents.
+          schema:
+            $ref: "#/definitions/OrganizationWithReferents"
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    delete: 
+      operationId: deleteOrganization
+      summary: Delete organization.
+      description: Delete an organization
+      parameters: 
+        - $ref: "#/parameters/OrganizationFiscalCode"
+      responses:
+        "200":
+          description: Deleted.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+
+  "/organization/{fiscalCode}/referents":
+    get:
+      operationId: getReferents
+      summary: Get referents
+      description: Get all referents for a organization
+      parameters: 
+        - $ref: "#/parameters/OrganizationFiscalCode"
+      responses:
+        "200":
+          description: List of referents.
+          schema:
+            $ref: "#/definitions/Referents"
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    post:
+      operationId: insertReferent
+      summary: Insert referent.
+      description: Insert a referent fiscalcode.
+      parameters:
+        - $ref: "#/parameters/OrganizationFiscalCode"
+        - $ref: "#/parameters/ReferentFiscalCode"
+      responses:
+        "200":
+          description: Inserted referent.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    delete:
+      operationId: deleteReferent
+      summary: Delete referent.
+      description: Delete a referent
+      parameters: 
+        - $ref: "#/parameters/OrganizationFiscalCode"
+        - $ref: "#/parameters/ReferentFiscalCode"
+      responses:
+        "200":
+          description: Deleted.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+
   "/companies":
     post:
       operationId: getUserCompanies
@@ -30,46 +155,6 @@ paths:
             $ref: "#/definitions/Companies"
         "404":
           description: Not found.
-        "500":
-          description: Service unavailable.
-          schema:
-            $ref: "#/definitions/ProblemJson"
-
-  "/user":
-    post:
-      operationId: upsertUser
-      summary: |
-        Upsert a User
-      description: |
-        Upsert a user with his related companies
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: "#/definitions/GetCompaniesBody"
-      responses:
-        "200":
-            description: Upserted.
-        "500":
-          description: Service unavailable.
-          schema:
-            $ref: "#/definitions/ProblemJson"
-    delete:
-      operationId: deleteUser
-      summary: |
-        Delete a User
-      description: |
-        Delete a user with his related companies
-      parameters:
-        - in: body
-          name: body
-          schema:
-            $ref: "#/definitions/GetCompaniesBody"
-      responses:
-        "200":
-            description: Deleted.
-        "404":
-            description: User not found.
         "500":
           description: Service unavailable.
           schema:
@@ -95,6 +180,49 @@ consumes:
 produces:
   - application/json
 
+parameters:
+  OrganizationFiscalCode:
+    in: path
+    name: organizationFiscalCode  
+    description: Organization fiscal code
+    required: true
+    type:
+      - $ref: "#/definitions/OrganizationFiscalCode"
+  ReferentFiscalCode:
+    in: body
+    name: body
+    required: true
+    schema:
+      - $ref: "#/definitions/ReferentFiscalCode"
+  QueryOrganizationName:
+    in: query
+    name: organizationName
+    description: String to search by organization name
+    required: false
+    type:
+      - $ref: "#/definitions/OrganizationName"
+  QueryOrganizationFiscalCode:
+    in: query
+    name: organizationFiscalCode
+    description: String to search by organization fiscal code
+    required: false
+    type: 
+      - $ref: "#/definitions/OrganizationFiscalCode"
+  PageSize:
+    name: pageSize
+    in: query
+    description: Page size
+    required: false
+    type: integer
+    default: 20
+  PageNumber:
+    name: page
+    in: query
+    description: Page number
+    required: false
+    type: integer
+    default: 0
+
 definitions:
   FiscalCode:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/FiscalCode"
@@ -102,6 +230,71 @@ definitions:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/ProblemJson"
   EmailAddress:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/EmailAddress"
+
+  OrganizationFiscalCode:
+    type: object
+    properties:   
+      organizationFiscalCode: 
+        type: string
+        minLength: 8
+        maxLength: 16
+    required:
+      - organizationFiscalCode
+
+  OrganizationName:
+    type: object
+    properties:   
+      organizationName: 
+        type: string
+        minLength: 1
+        maxLength: 100
+    required:
+      - organizationName
+
+  ReferentFiscalCode:
+    type: object
+    properties:
+      referentFiscalCode:
+        $ref: "#/definitions/FiscalCode"   
+    required:
+      - referentFiscalCode
+
+  Organization:
+    allOf: 
+      - $ref: "#/definitions/OrganizationFiscalCode"
+      - $ref: "#/definitions/OrganizationName"
+      - type: object
+        properties:   
+          pec:
+            $ref: "#/definitions/EmailAddress"
+        required:
+          - pec
+
+  Organizations:
+    type: array
+    items:
+      $ref: "#/definitions/Organization"
+
+  Referents:
+    type: array
+    items:
+      $ref: "#/definitions/ReferentFiscalCode"
+
+  OrganizationWithReferent:
+    allOf:
+      - $ref: "#/definitions/Organization"
+      - $ref: "#/definitions/Referents"
+
+  ###################################################################
+  # Old models to leave hub SPID login /companies binding unaltered #
+  ###################################################################
+  GetCompaniesBody:
+    type: object
+    properties:
+      fiscalCode:
+        $ref: "#/definitions/FiscalCode"
+    required:
+      - fiscalCode
 
   Company: 
     type: object
@@ -113,6 +306,7 @@ definitions:
       organizationName:
         type: string
         minLength: 1
+        maxLength: 100
       pec:
         $ref: "#/definitions/EmailAddress"
     required:
@@ -120,14 +314,6 @@ definitions:
       - organizationName
       - pec
 
-  GetCompaniesBody:
-    type: object
-    properties:
-      fiscalCode:
-        $ref: "#/definitions/FiscalCode"
-    required:
-      - fiscalCode
-    
   Companies:
     type: array
     items:
