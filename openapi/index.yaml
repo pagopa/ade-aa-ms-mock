@@ -85,57 +85,6 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
 
-  "/organization/{fiscalCode}/referents":
-    get:
-      operationId: getReferents
-      summary: Get referents
-      description: Get all referents for a organization
-      parameters: 
-        - $ref: "#/parameters/OrganizationFiscalCode"
-      responses:
-        "200":
-          description: List of referents.
-          schema:
-            $ref: "#/definitions/Referents"
-        "404":
-          description: Not found.
-        "500":
-          description: Service unavailable.
-          schema:
-            $ref: "#/definitions/ProblemJson"
-    post:
-      operationId: insertReferent
-      summary: Insert referent.
-      description: Insert a referent fiscalcode.
-      parameters:
-        - $ref: "#/parameters/OrganizationFiscalCode"
-        - $ref: "#/parameters/ReferentFiscalCode"
-      responses:
-        "200":
-          description: Inserted referent.
-        "404":
-          description: Not found.
-        "500":
-          description: Service unavailable.
-          schema:
-            $ref: "#/definitions/ProblemJson"
-    delete:
-      operationId: deleteReferent
-      summary: Delete referent.
-      description: Delete a referent
-      parameters: 
-        - $ref: "#/parameters/OrganizationFiscalCode"
-        - $ref: "#/parameters/ReferentFiscalCode"
-      responses:
-        "200":
-          description: Deleted.
-        "404":
-          description: Not found.
-        "500":
-          description: Service unavailable.
-          schema:
-            $ref: "#/definitions/ProblemJson"
-
   "/companies":
     post:
       operationId: getUserCompanies
@@ -280,7 +229,7 @@ definitions:
     items:
       $ref: "#/definitions/ReferentFiscalCode"
 
-  OrganizationWithReferent:
+  OrganizationWithReferents:
     allOf:
       - $ref: "#/definitions/Organization"
       - $ref: "#/definitions/Referents"
@@ -288,6 +237,7 @@ definitions:
   ###################################################################
   # Old models to leave hub SPID login /companies binding unaltered #
   ###################################################################
+  
   GetCompaniesBody:
     type: object
     properties:
