@@ -1,16 +1,25 @@
 import { BlobServiceClient } from "@azure/storage-blob";
+import { TableClient, TableServiceClient } from "@azure/data-tables";
 import { fastify, FastifyInstance } from "fastify";
 import * as TE from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
-import { UserCompanies } from "../generated/definitions/UserCompanies";
+import { OrganizationWithReferents } from "../generated/definitions/OrganizationWithReferents";
+import { ReferentFiscalCode } from "../generated/definitions/ReferentFiscalCode";
+import { KeyOrganizationFiscalCode } from "../generated/definitions/KeyOrganizationFiscalCode";
 import { getCompaniesHandler } from "./handlers/company";
-import { upsertUserHandler } from "./handlers/user";
-import { withRequestMiddlewares } from "./middlewares/request_middleware";
+import {
+  withDoubleRequestMiddlewares,
+  withRequestMiddlewares,
+} from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { initializeCompaniesBlob } from "./utils/startup";
+import { IGetOrganizationsQueryString } from "./handlers/organization";
+import * as organizationHandler from "./handlers/organization";
+import * as referentHandler from "./handlers/referent";
+import { queryParamsMiddleware } from "./middlewares/query_params";
+import { pathParamsMiddleware } from "./middlewares/path_params";
 
 const config = getConfigOrThrow();
 
@@ -27,18 +36,126 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
   config.STORAGE_CONNECTION_STRING
 );
 
-if (!config.isProduction) {
-  initializeCompaniesBlob(
-    blobServiceClient,
-    config.CONTAINER_NAME,
-    config.BLOB_NAME
-  )()
-    // tslint:disable-next-line: no-console
-    .then(() => console.log("Test Blob initialized"))
-    // tslint:disable-next-line: no-console
-    .catch(console.log);
-}
+const organizationsTableClient = TableClient.fromConnectionString(
+  config.STORAGE_CONNECTION_STRING,
+  config.ORGANIZAZIONS_TABLE_NAME
+);
 
+const referentsTableClient = TableClient.fromConnectionString(
+  config.STORAGE_CONNECTION_STRING,
+  config.REFERENTS_TABLE_NAME
+);
+
+server.get(
+  "/organizations",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        queryParamsMiddleware(IGetOrganizationsQueryString)
+      ),
+  },
+  organizationHandler.getOrganizationsHandler(
+    organizationsTableClient
+  )
+);
+
+server.post<{ Body: OrganizationWithReferents }>(
+  "/organizations",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        requiredBodyMiddleware(OrganizationWithReferents)
+      ),
+  },
+  organizationHandler.upsertOrganizationHandler(
+    organizationsTableClient
+  )
+);
+
+server.get(
+  "/organization/:keyOrganizationFiscalCode",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      ),
+  },
+  organizationHandler.getOrganizationHandler(
+    organizationsTableClient
+  )
+);
+
+server.delete(
+  "/organization/:keyOrganizationFiscalCode",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      ),
+  },
+  organizationHandler.deleteOrganizationHandler(
+    organizationsTableClient
+  )
+);
+
+server.get(
+  "/organization/:keyOrganizationFiscalCode/referents",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      ),
+  },
+  referentHandler.getReferentsHandler(
+    referentsTableClient
+  )
+);
+
+server.post<{ Body: ReferentFiscalCode }>(
+  "/organization/:keyOrganizationFiscalCode/referents",
+  {
+    preHandler: async (request, reply) =>
+      withDoubleRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode),
+        requiredBodyMiddleware(ReferentFiscalCode)
+      ),
+  },
+  referentHandler.insertReferentHandler(
+    referentsTableClient
+  )
+);
+
+server.delete<{ Body: ReferentFiscalCode }>(
+  "/organization/:keyOrganizationFiscalCode/referents",
+  {
+    preHandler: async (request, reply) =>
+      withDoubleRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode),
+        requiredBodyMiddleware(ReferentFiscalCode)
+      ),
+  },
+  referentHandler.deleteReferentHandler(
+    referentsTableClient
+  )
+);
+
+/**
+ * Legacy endpoint to serve hub-spid-login service
+ */
 server.post<{ Body: GetCompaniesBody; Response: Companies }>(
   "/companies",
   {
@@ -47,26 +164,13 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         request,
         reply,
         requiredBodyMiddleware(GetCompaniesBody)
-      )
+      ),
   },
   getCompaniesHandler(
     blobServiceClient,
     config.CONTAINER_NAME,
     config.BLOB_NAME
   )
-);
-
-server.post<{ Body: UserCompanies }>(
-  "/user",
-  {
-    preHandler: async (request, reply) =>
-      withRequestMiddlewares(
-        request,
-        reply,
-        requiredBodyMiddleware(UserCompanies)
-      )
-  },
-  upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
 );
 
 server.get("/ping", {}, (_, reply) => TE.of(reply.code(200).send("OK"))());

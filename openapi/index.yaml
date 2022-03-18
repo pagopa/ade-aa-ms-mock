@@ -51,13 +51,13 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
 
-  "/organization/{organizationFiscalCode}":
+  "/organization/{keyOrganizationFiscalCode}":
     get:
       operationId: getOrganization
       summary: Get organization
       description: Get an organization by fiscal code
       parameters:
-        - $ref: "#/parameters/OrganizationFiscalCode"
+        - $ref: "#/parameters/KeyOrganizationFiscalCode"
       responses:
         "200":
           description: An organization with referents.
@@ -74,7 +74,58 @@ paths:
       summary: Delete organization.
       description: Delete an organization
       parameters: 
-        - $ref: "#/parameters/OrganizationFiscalCode"
+        - $ref: "#/parameters/KeyOrganizationFiscalCode"
+      responses:
+        "200":
+          description: Deleted.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+
+  "/organization/{keyOrganizationFiscalCode}/referents":
+    get:
+      operationId: getReferents
+      summary: Get referents
+      description: Get all referents for a organization
+      parameters: 
+        - $ref: "#/parameters/KeyOrganizationFiscalCode"
+      responses:
+        "200":
+          description: List of referents.
+          schema:
+            $ref: "#/definitions/Referents"
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    post:
+      operationId: insertReferent
+      summary: Insert referent.
+      description: Insert a referent fiscalcode.
+      parameters:
+        - $ref: "#/parameters/KeyOrganizationFiscalCode"
+        - $ref: "#/parameters/ReferentFiscalCode"
+      responses:
+        "200":
+          description: Inserted referent.
+        "404":
+          description: Not found.
+        "500":
+          description: Service unavailable.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+    delete:
+      operationId: deleteReferent
+      summary: Delete referent.
+      description: Delete a referent
+      parameters: 
+        - $ref: "#/parameters/KeyOrganizationFiscalCode"
+        - $ref: "#/parameters/ReferentFiscalCode"
       responses:
         "200":
           description: Deleted.
@@ -130,13 +181,14 @@ produces:
   - application/json
 
 parameters:
-  OrganizationFiscalCode:
+  KeyOrganizationFiscalCode:
     in: path
-    name: organizationFiscalCode  
+    name: keyOrganizationFiscalCode  
     description: Organization fiscal code
     required: true
-    type:
-      - $ref: "#/definitions/OrganizationFiscalCode"
+    type: string
+    minLength: 8
+    maxLength: 16
   ReferentFiscalCode:
     in: body
     name: body
@@ -148,15 +200,17 @@ parameters:
     name: organizationName
     description: String to search by organization name
     required: false
-    type:
-      - $ref: "#/definitions/OrganizationName"
+    type: string
+    minLength: 1
+    maxLength: 100
   QueryOrganizationFiscalCode:
     in: query
     name: organizationFiscalCode
     description: String to search by organization fiscal code
     required: false
-    type: 
-      - $ref: "#/definitions/OrganizationFiscalCode"
+    type: string
+    minLength: 8
+    maxLength: 16
   PageSize:
     name: pageSize
     in: query
@@ -180,6 +234,16 @@ definitions:
   EmailAddress:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/EmailAddress"
 
+  KeyOrganizationFiscalCode:
+    type: object
+    properties:   
+      keyOrganizationFiscalCode: 
+        type: string
+        minLength: 8
+        maxLength: 16
+    required:
+      - keyOrganizationFiscalCode
+  
   OrganizationFiscalCode:
     type: object
     properties:   
@@ -219,20 +283,26 @@ definitions:
         required:
           - pec
 
-  Organizations:
-    type: array
-    items:
-      $ref: "#/definitions/Organization"
-
   Referents:
     type: array
     items:
-      $ref: "#/definitions/ReferentFiscalCode"
+      $ref: "#/definitions/FiscalCode"
 
   OrganizationWithReferents:
     allOf:
+      - $ref: "#/definitions/KeyOrganizationFiscalCode"
       - $ref: "#/definitions/Organization"
-      - $ref: "#/definitions/Referents"
+      - type: object
+        properties:
+          referents:
+            $ref: "#/definitions/Referents"
+        required:
+          - referents
+
+  Organizations:
+    type: array
+    items:
+      $ref: "#/definitions/OrganizationWithReferents"
 
   ###################################################################
   # Old models to leave hub SPID login /companies binding unaltered #

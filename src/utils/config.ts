@@ -23,6 +23,8 @@ export const IConfig = t.interface({
   BLOB_NAME: NonEmptyString,
   CONTAINER_NAME: NonEmptyString,
   STORAGE_CONNECTION_STRING: NonEmptyString,
+  ORGANIZAZIONS_TABLE_NAME: NonEmptyString,
+  REFERENTS_TABLE_NAME: NonEmptyString,
 
   SERVER_PORT: NonNegativeInteger
 });
