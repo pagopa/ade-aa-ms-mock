@@ -17,10 +17,11 @@ paths:
       summary: Get organizations
       description: Get all organizations
       parameters:
-        - $ref: "#/parameters/QueryOrganizationName"
-        - $ref: "#/parameters/QueryOrganizationFiscalCode"
+        - $ref: "#/parameters/SearchQuery"
         - $ref: "#/parameters/PageNumber"
         - $ref: "#/parameters/PageSize"
+        - $ref: "#/parameters/SortBy"
+        - $ref: "#/parameters/SortDirection"
       responses:
         "200":
           description: List of organizations.
@@ -44,6 +45,8 @@ paths:
       responses:
         "200":
           description: Upserted organization.
+          schema:
+            $ref: "#/definitions/OrganizationWithReferents"
         "404":
           description: Not found.
         "500":
@@ -69,11 +72,11 @@ paths:
           description: Service unavailable.
           schema:
             $ref: "#/definitions/ProblemJson"
-    delete: 
+    delete:
       operationId: deleteOrganization
       summary: Delete organization.
       description: Delete an organization
-      parameters: 
+      parameters:
         - $ref: "#/parameters/KeyOrganizationFiscalCode"
       responses:
         "200":
@@ -90,7 +93,7 @@ paths:
       operationId: getReferents
       summary: Get referents
       description: Get all referents for a organization
-      parameters: 
+      parameters:
         - $ref: "#/parameters/KeyOrganizationFiscalCode"
       responses:
         "200":
@@ -123,7 +126,7 @@ paths:
       operationId: deleteReferent
       summary: Delete referent.
       description: Delete a referent
-      parameters: 
+      parameters:
         - $ref: "#/parameters/KeyOrganizationFiscalCode"
         - $ref: "#/parameters/ReferentFiscalCode"
       responses:
@@ -169,7 +172,7 @@ paths:
         ping ade service
       responses:
         "200":
-            description: OK.
+          description: OK.
         "500":
           description: Service unavailable.
           schema:
@@ -183,7 +186,7 @@ produces:
 parameters:
   KeyOrganizationFiscalCode:
     in: path
-    name: keyOrganizationFiscalCode  
+    name: keyOrganizationFiscalCode
     description: Organization fiscal code
     required: true
     type: string
@@ -194,23 +197,15 @@ parameters:
     name: body
     required: true
     schema:
-      - $ref: "#/definitions/ReferentFiscalCode"
-  QueryOrganizationName:
+      $ref: "#/definitions/ReferentFiscalCode"
+  SearchQuery:
     in: query
-    name: organizationName
-    description: String to search by organization name
+    name: searchQuery
+    description: String to search in organization name o fiscal code
     required: false
     type: string
     minLength: 1
     maxLength: 100
-  QueryOrganizationFiscalCode:
-    in: query
-    name: organizationFiscalCode
-    description: String to search by organization fiscal code
-    required: false
-    type: string
-    minLength: 8
-    maxLength: 16
   PageSize:
     name: pageSize
     in: query
@@ -225,6 +220,27 @@ parameters:
     required: false
     type: integer
     default: 0
+  SortBy:
+    name: sortBy
+    in: query
+    description: The field to sort by
+    required: false
+    type: string
+    enum:
+      - fiscalCode
+      - name
+      - pec
+      - insertedAt
+  SortDirection:
+    name: sortDirection
+    in: query
+    description: The direction of the sort
+    required: false
+    type: string
+    default: ASC
+    enum:
+      - ASC
+      - DESC
 
 definitions:
   FiscalCode:
@@ -233,21 +249,23 @@ definitions:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/ProblemJson"
   EmailAddress:
     $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/EmailAddress"
+  Timestamp:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v22.7.0/openapi/definitions.yaml#/Timestamp"
 
   KeyOrganizationFiscalCode:
     type: object
-    properties:   
-      keyOrganizationFiscalCode: 
+    properties:
+      keyOrganizationFiscalCode:
         type: string
         minLength: 8
         maxLength: 16
     required:
       - keyOrganizationFiscalCode
-  
+
   OrganizationFiscalCode:
     type: object
-    properties:   
-      organizationFiscalCode: 
+    properties:
+      organizationFiscalCode:
         type: string
         minLength: 8
         maxLength: 16
@@ -256,8 +274,8 @@ definitions:
 
   OrganizationName:
     type: object
-    properties:   
-      organizationName: 
+    properties:
+      organizationName:
         type: string
         minLength: 1
         maxLength: 100
@@ -268,20 +286,23 @@ definitions:
     type: object
     properties:
       referentFiscalCode:
-        $ref: "#/definitions/FiscalCode"   
+        $ref: "#/definitions/FiscalCode"
     required:
       - referentFiscalCode
 
   Organization:
-    allOf: 
+    allOf:
       - $ref: "#/definitions/OrganizationFiscalCode"
       - $ref: "#/definitions/OrganizationName"
       - type: object
-        properties:   
+        properties:
           pec:
             $ref: "#/definitions/EmailAddress"
+          insertedAt:
+            $ref: "#/definitions/Timestamp"
         required:
           - pec
+          - insertedAt
 
   Referents:
     type: array
@@ -307,7 +328,7 @@ definitions:
   ###################################################################
   # Old models to leave hub SPID login /companies binding unaltered #
   ###################################################################
-  
+
   GetCompaniesBody:
     type: object
     properties:
@@ -316,10 +337,10 @@ definitions:
     required:
       - fiscalCode
 
-  Company: 
+  Company:
     type: object
-    properties:   
-      fiscalCode: 
+    properties:
+      fiscalCode:
         type: string
         minLength: 8
         maxLength: 16
@@ -349,4 +370,3 @@ definitions:
     required:
       - fiscalCode
       - companies
-

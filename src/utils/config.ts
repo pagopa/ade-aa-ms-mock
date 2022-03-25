@@ -18,14 +18,13 @@ import * as t from "io-ts";
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.interface({
+  isPostgresSslEnabled: t.boolean,
   isProduction: t.boolean,
 
+  ATTRIBUTE_AUTHORITY_POSTGRES_DB_URI: NonEmptyString,
   BLOB_NAME: NonEmptyString,
   CONTAINER_NAME: NonEmptyString,
   STORAGE_CONNECTION_STRING: NonEmptyString,
-  ORGANIZAZIONS_TABLE_NAME: NonEmptyString,
-  REFERENTS_TABLE_NAME: NonEmptyString,
-
   SERVER_PORT: NonNegativeInteger
 });
 
@@ -37,6 +36,7 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
     IntegerFromString.decode,
     E.getOrElse(() => -1)
   ),
+  isPostgresSslEnabled: process.env.ATTRIBUTE_AUTHORITY_POSTGRES_DB_SSL_ENABLED === "true",
   isProduction: process.env.NODE_ENV === "production"
 });
 

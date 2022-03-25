@@ -1,12 +1,9 @@
-import { TableClient } from "@azure/data-tables";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { IncomingMessage, Server } from "http";
 import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
 import { ReferentFiscalCode } from "../../generated/definitions/ReferentFiscalCode";
 
-export const getReferentsHandler = (
-  referentsTableClient: TableClient
-) => async (
+export const getReferentsHandler = () => async (
   request: FastifyRequest<
     {
       Params: KeyOrganizationFiscalCode;
@@ -19,9 +16,7 @@ export const getReferentsHandler = (
   const keyOrganizationFiscalCode = request.params.keyOrganizationFiscalCode;
 };
 
-export const insertReferentHandler = (
-  referentsTableClient: TableClient
-) => async (
+export const insertReferentHandler = () => async (
   request: FastifyRequest<
     {
       Params: KeyOrganizationFiscalCode;
@@ -36,9 +31,7 @@ export const insertReferentHandler = (
   const referentFiscalCode = request.body.referentFiscalCode;
 };
 
-export const deleteReferentHandler = (
-  referentsTableClient: TableClient
-) => async (
+export const deleteReferentHandler = () => async (
   request: FastifyRequest<
     {
       Params: KeyOrganizationFiscalCode;

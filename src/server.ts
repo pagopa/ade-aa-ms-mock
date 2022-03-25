@@ -1,5 +1,4 @@
 import { BlobServiceClient } from "@azure/storage-blob";
-import { TableClient, TableServiceClient } from "@azure/data-tables";
 import { fastify, FastifyInstance } from "fastify";
 import * as TE from "fp-ts/lib/TaskEither";
 import { IncomingMessage, Server, ServerResponse } from "http";
@@ -20,6 +19,10 @@ import * as organizationHandler from "./handlers/organization";
 import * as referentHandler from "./handlers/referent";
 import { queryParamsMiddleware } from "./middlewares/query_params";
 import { pathParamsMiddleware } from "./middlewares/path_params";
+import { Sequelize } from "sequelize";
+import { sequelizePostgresOptions } from "./utils/sequelize-options";
+import { initModels } from "./models/dbModels";
+import { Organizations } from "../generated/definitions/Organizations";
 
 const config = getConfigOrThrow();
 
@@ -36,17 +39,18 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
   config.STORAGE_CONNECTION_STRING
 );
 
-const organizationsTableClient = TableClient.fromConnectionString(
-  config.STORAGE_CONNECTION_STRING,
-  config.ORGANIZAZIONS_TABLE_NAME
+const attributeAuthorityPostgresDb = new Sequelize(
+  config.ATTRIBUTE_AUTHORITY_POSTGRES_DB_URI,
+  sequelizePostgresOptions()
 );
 
-const referentsTableClient = TableClient.fromConnectionString(
-  config.STORAGE_CONNECTION_STRING,
-  config.REFERENTS_TABLE_NAME
-);
+// Initialize models and sync them
+initModels(attributeAuthorityPostgresDb);
 
-server.get(
+server.get<{
+  Querystring: IGetOrganizationsQueryString;
+  Response: Organizations;
+}>(
   "/organizations",
   {
     preHandler: async (request, reply) =>
@@ -56,9 +60,7 @@ server.get(
         queryParamsMiddleware(IGetOrganizationsQueryString)
       ),
   },
-  organizationHandler.getOrganizationsHandler(
-    organizationsTableClient
-  )
+  organizationHandler.getOrganizationsHandler()
 );
 
 server.post<{ Body: OrganizationWithReferents }>(
@@ -71,9 +73,7 @@ server.post<{ Body: OrganizationWithReferents }>(
         requiredBodyMiddleware(OrganizationWithReferents)
       ),
   },
-  organizationHandler.upsertOrganizationHandler(
-    organizationsTableClient
-  )
+  organizationHandler.upsertOrganizationHandler()
 );
 
 server.get(
@@ -86,9 +86,7 @@ server.get(
         pathParamsMiddleware(KeyOrganizationFiscalCode)
       ),
   },
-  organizationHandler.getOrganizationHandler(
-    organizationsTableClient
-  )
+  organizationHandler.getOrganizationHandler()
 );
 
 server.delete(
@@ -101,9 +99,7 @@ server.delete(
         pathParamsMiddleware(KeyOrganizationFiscalCode)
       ),
   },
-  organizationHandler.deleteOrganizationHandler(
-    organizationsTableClient
-  )
+  organizationHandler.deleteOrganizationHandler()
 );
 
 server.get(
@@ -116,9 +112,7 @@ server.get(
         pathParamsMiddleware(KeyOrganizationFiscalCode)
       ),
   },
-  referentHandler.getReferentsHandler(
-    referentsTableClient
-  )
+  referentHandler.getReferentsHandler()
 );
 
 server.post<{ Body: ReferentFiscalCode }>(
@@ -132,9 +126,7 @@ server.post<{ Body: ReferentFiscalCode }>(
         requiredBodyMiddleware(ReferentFiscalCode)
       ),
   },
-  referentHandler.insertReferentHandler(
-    referentsTableClient
-  )
+  referentHandler.insertReferentHandler()
 );
 
 server.delete<{ Body: ReferentFiscalCode }>(
@@ -148,9 +140,7 @@ server.delete<{ Body: ReferentFiscalCode }>(
         requiredBodyMiddleware(ReferentFiscalCode)
       ),
   },
-  referentHandler.deleteReferentHandler(
-    referentsTableClient
-  )
+  referentHandler.deleteReferentHandler()
 );
 
 /**
