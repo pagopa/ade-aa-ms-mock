@@ -8,14 +8,16 @@ import * as TE from "fp-ts/TaskEither";
 import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
 import {
+  deleteOrganization,
+  getOrganization,
   getOrganizations,
   upsertOrganization,
 } from "../services/organizationService";
 import {
   toFastifyReply,
   toInternalServerError,
+  toNotFoundResponse,
   toSuccessFastifyReply,
-  toSuccessJsonResponse,
 } from "../utils/response";
 import { RouteGenericInterface } from "fastify/types/route";
 import { Organizations } from "../../generated/definitions/Organizations";
@@ -81,9 +83,16 @@ export const getOrganizationHandler = () => async (
     IncomingMessage
   >,
   reply: FastifyReply
-) => {
-  const keyOrganizationFiscalCode = request.params.keyOrganizationFiscalCode;
-};
+) =>
+  pipe(
+    getOrganization(request.params.keyOrganizationFiscalCode),
+    TE.mapLeft(toInternalServerError),
+    TE.chainW(
+      TE.fromOption(() => toNotFoundResponse("Organization Not Found"))
+    ),
+    TE.bimap(toFastifyReply(reply), toSuccessFastifyReply(reply)),
+    TE.toUnion
+  )();
 
 export const deleteOrganizationHandler = () => async (
   request: FastifyRequest<
@@ -95,5 +104,13 @@ export const deleteOrganizationHandler = () => async (
   >,
   reply: FastifyReply
 ) => {
-  const keyOrganizationFiscalCode = request.params.keyOrganizationFiscalCode;
+  pipe(
+    deleteOrganization(request.params.keyOrganizationFiscalCode),
+    TE.mapLeft(toInternalServerError),
+    TE.chainW(
+      TE.fromOption(() => toNotFoundResponse("Organization Not Found"))
+    ),
+    TE.bimap(toFastifyReply(reply), toSuccessFastifyReply(reply)),
+    TE.toUnion
+  )();
 };

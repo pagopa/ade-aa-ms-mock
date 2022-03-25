@@ -156,11 +156,7 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         requiredBodyMiddleware(GetCompaniesBody)
       ),
   },
-  getCompaniesHandler(
-    blobServiceClient,
-    config.CONTAINER_NAME,
-    config.BLOB_NAME
-  )
+  getCompaniesHandler()
 );
 
 server.get("/ping", {}, (_, reply) => TE.of(reply.code(200).send("OK"))());

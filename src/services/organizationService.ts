@@ -11,6 +11,8 @@ import {
 } from "../models/dbModels";
 import { Op, QueryTypes } from "sequelize";
 import { UpdateOrganizationPrimaryKey } from "../utils/postgres_queries";
+import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { Errors } from "io-ts";
 
 const filterByNameOrFiscalCode = (searchQuery?: string) =>
   pipe(
@@ -139,6 +141,67 @@ export const upsertOrganization = (
             }),
             E.mapLeft(E.toError),
             TE.fromEither
+          )
+        )
+      )
+    )
+  );
+
+export const getOrganization = (
+  keyOrganizationFiscalCode: FiscalCode
+): TE.TaskEither<Error, O.Option<OrganizationWithReferents>> =>
+  pipe(
+    TE.tryCatch(
+      () =>
+        OrganizationModel.findByPk(keyOrganizationFiscalCode, {
+          include: [OrganizationModel.associations.referents],
+        }),
+      E.toError
+    ),
+    TE.map((maybeOrganizationModel) =>
+      pipe(
+        O.fromNullable(maybeOrganizationModel),
+        O.chain((org) =>
+          pipe(
+            OrganizationWithReferents.decode({
+              keyOrganizationFiscalCode: org.fiscalCode,
+              organizationFiscalCode: org.fiscalCode,
+              organizationName: org.name,
+              pec: org.pec,
+              insertedAt: org.insertedAt,
+              referents: org.referents.map((r) => r.fiscalCode),
+            }),
+            O.fromPredicate(E.isRight),
+            O.map((o) => o.right)
+          )
+        )
+      )
+    )
+  );
+
+export const deleteOrganization = (
+  keyOrganizationFiscalCode: FiscalCode
+): TE.TaskEither<Error, O.Option<Promise<void>>> =>
+  pipe(
+    TE.tryCatch(
+      () =>
+        OrganizationModel.findByPk(keyOrganizationFiscalCode, {
+          include: [OrganizationModel.associations.referents],
+        }),
+      E.toError
+    ),
+    TE.chain((maybeOrganizationModel) =>
+      pipe(
+        O.fromNullable(maybeOrganizationModel),
+        TE.of,
+        TE.chain((organizationModel) =>
+          TE.tryCatch(
+            async () =>
+              pipe(
+                organizationModel,
+                O.map(async (org) => await org.destroy())
+              ),
+            E.toError
           )
         )
       )
