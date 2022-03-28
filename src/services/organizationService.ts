@@ -1,5 +1,5 @@
 import * as AR from "fp-ts/lib/Array";
-import { flow, pipe } from "fp-ts/lib/function";
+import { identity, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as E from "fp-ts/lib/Either";
 import * as TE from "fp-ts/lib/TaskEither";
@@ -12,7 +12,11 @@ import {
 import { Op, QueryTypes } from "sequelize";
 import { UpdateOrganizationPrimaryKey } from "../utils/postgres_queries";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
-import { Errors } from "io-ts";
+import {
+  ISortByOrganizations,
+  ISortDirectionOrganizations,
+} from "../models/parameters";
+import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
 
 const filterByNameOrFiscalCode = (searchQuery?: string) =>
   pipe(
@@ -28,7 +32,7 @@ const filterByNameOrFiscalCode = (searchQuery?: string) =>
     O.getOrElse(() => ({}))
   );
 
-const paging = (page?: number, pageSize?: number) =>
+const paging = (page?: NumberFromString, pageSize?: NumberFromString) =>
   pipe(
     O.Do,
     O.bind("page", () => O.fromNullable(page)),
@@ -40,35 +44,70 @@ const paging = (page?: number, pageSize?: number) =>
     O.getOrElse(() => ({}))
   );
 
+const ordering = (
+  by?: ISortByOrganizations,
+  direction?: ISortDirectionOrganizations
+) =>
+  pipe(
+    O.Do,
+    O.bind("by", () => O.fromNullable(by)),
+    O.bind("order", () => O.fromNullable(direction)),
+    O.map(({ by, order }) => ({
+      order: [[by, order]],
+    })),
+    O.getOrElse(() => ({}))
+  );
+
 export const getOrganizations = (
-  page?: number,
-  pageSize?: number,
-  searchQuery?: string
+  page?: NumberFromString,
+  pageSize?: NumberFromString,
+  searchQuery?: string,
+  sortBy?: ISortByOrganizations,
+  sortDirection?: ISortDirectionOrganizations
 ): TE.TaskEither<Error, Organizations> =>
   pipe(
-    TE.tryCatch(
-      () =>
-        OrganizationModel.findAll({
-          include: [OrganizationModel.associations.referents],
-          ...filterByNameOrFiscalCode(searchQuery),
-          ...paging(page, pageSize),
-        }),
-      E.toError
+    TE.Do,
+    TE.bind("organizations", () =>
+      TE.tryCatch(
+        () =>
+          OrganizationModel.findAll({
+            include: [OrganizationModel.associations.referents],
+            ...filterByNameOrFiscalCode(searchQuery),
+            ...paging(page, pageSize),
+            ...ordering(sortBy, sortDirection),
+          }),
+        E.toError
+      )
     ),
-    TE.map(
-      flow(
-        AR.map((m) =>
-          OrganizationWithReferents.decode({
-            keyOrganizationFiscalCode: m.fiscalCode,
-            organizationFiscalCode: m.fiscalCode,
-            organizationName: m.name,
-            pec: m.pec,
-            insertedAt: m.insertedAt,
-            referents: m.referents.map((r) => r.fiscalCode),
-          })
-        ),
-        AR.filter(E.isRight),
-        AR.map((e) => e.right)
+    TE.bind("count", () =>
+      TE.tryCatch(
+        () =>
+          OrganizationModel.count({
+            ...filterByNameOrFiscalCode(searchQuery),
+            ...paging(page, pageSize),
+            ...ordering(sortBy, sortDirection),
+          }),
+        E.toError
+      )
+    ),
+    TE.map(({ organizations, count }) =>
+      pipe(
+        organizations,
+        AR.map((m) => ({
+          keyOrganizationFiscalCode: m.fiscalCode,
+          organizationFiscalCode: m.fiscalCode,
+          organizationName: m.name,
+          pec: m.pec,
+          insertedAt: m.insertedAt,
+          referents: m.referents.map((r) => r.fiscalCode),
+        })),
+        (items) => ({
+          items,
+          count,
+        }),
+        Organizations.decode,
+        E.bimap((_) => E.toError("Cannot decode response"), identity),
+        E.toUnion
       )
     )
   );
@@ -77,33 +116,26 @@ export const upsertOrganization = (
   organizationWithReferents: OrganizationWithReferents
 ): TE.TaskEither<Error, OrganizationWithReferents> =>
   pipe(
-    TE.of(
-      organizationWithReferents.keyOrganizationFiscalCode !==
+    TE.tryCatch(async () => {
+      if (
+        organizationWithReferents.keyOrganizationFiscalCode !==
         organizationWithReferents.organizationFiscalCode
-    ),
-    TE.chain((shouldUpdatePrimaryKey) =>
-      TE.tryCatch(async () => {
-        shouldUpdatePrimaryKey
-          ? await OrganizationModel.sequelize.query(
-              UpdateOrganizationPrimaryKey,
-              {
-                raw: true,
-                replacements: {
-                  new_fiscal_code:
-                    organizationWithReferents.organizationFiscalCode,
-                  old_fiscal_code:
-                    organizationWithReferents.keyOrganizationFiscalCode,
-                },
-                type: QueryTypes.UPDATE,
-              }
-            )
-          : void 0;
-      }, E.toError)
-    ),
+      ) {
+        await OrganizationModel.sequelize.query(UpdateOrganizationPrimaryKey, {
+          raw: true,
+          replacements: {
+            new_fiscal_code: organizationWithReferents.organizationFiscalCode,
+            old_fiscal_code:
+              organizationWithReferents.keyOrganizationFiscalCode,
+          },
+          type: QueryTypes.UPDATE,
+        });
+      }
+    }, E.toError),
     TE.chain(() =>
       TE.tryCatch(
         async () =>
-          await OrganizationModel.upsert({
+          OrganizationModel.upsert({
             fiscalCode: organizationWithReferents.organizationFiscalCode,
             name: organizationWithReferents.organizationName,
             pec: organizationWithReferents.pec,
@@ -113,22 +145,38 @@ export const upsertOrganization = (
     ),
     TE.chain(([organization, _]) =>
       pipe(
-        TE.tryCatch(async () => {
-          const referentsToRemove = await organization.getReferents();
-          await organization.removeReferents(referentsToRemove, {
-            force: true,
-          });
-          const referents = (
-            await Promise.all(
-              organizationWithReferents.referents.map((r) =>
-                Referent.upsert({ fiscalCode: r })
-              )
-            )
-          ).map(([r, _]) => r);
-          await organization.addReferents(referents, {
-            ignoreDuplicates: true,
-          });
-        }, E.toError),
+        TE.tryCatch(async () => await organization.getReferents(), E.toError),
+        TE.chain((referentsToRemove) =>
+          TE.tryCatch(
+            async () =>
+              await organization.removeReferents(referentsToRemove, {
+                force: true,
+              }),
+            E.toError
+          )
+        ),
+        TE.chain(() =>
+          TE.tryCatch(
+            async () =>
+              (
+                await Promise.all(
+                  organizationWithReferents.referents.map((r) =>
+                    Referent.upsert({ fiscalCode: r })
+                  )
+                )
+              ).map(([r, _]) => r),
+            E.toError
+          )
+        ),
+        TE.chain((referents) =>
+          TE.tryCatch(
+            async () =>
+              await organization.addReferents(referents, {
+                ignoreDuplicates: true,
+              }),
+            E.toError
+          )
+        ),
         TE.chain(() =>
           pipe(
             OrganizationWithReferents.decode({

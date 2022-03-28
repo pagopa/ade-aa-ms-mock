@@ -1,9 +1,6 @@
-import { WithinRangeString } from "@pagopa/ts-commons/lib/strings";
-import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { pipe } from "fp-ts/lib/function";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import * as t from "io-ts";
 import * as TE from "fp-ts/TaskEither";
 import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
@@ -21,16 +18,7 @@ import {
 } from "../utils/response";
 import { RouteGenericInterface } from "fastify/types/route";
 import { Organizations } from "../../generated/definitions/Organizations";
-
-export const IGetOrganizationsQueryString = t.partial({
-  page: withDefault(t.number, 0),
-  pageSize: withDefault(t.number, 20),
-  searchQuery: WithinRangeString(1, 100),
-});
-
-export type IGetOrganizationsQueryString = t.TypeOf<
-  typeof IGetOrganizationsQueryString
->;
+import { IGetOrganizationsQueryString } from "../models/parameters";
 
 export const getOrganizationsHandler = () => async (
   request: FastifyRequest<
@@ -50,7 +38,9 @@ export const getOrganizationsHandler = () => async (
     getOrganizations(
       request.query.page,
       request.query.pageSize,
-      request.query.searchQuery
+      request.query.searchQuery,
+      request.query.sortBy,
+      request.query.sortDirection
     ),
     TE.mapLeft(toInternalServerError),
     TE.bimap(toFastifyReply(reply), toSuccessFastifyReply(reply)),

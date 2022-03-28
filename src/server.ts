@@ -14,7 +14,7 @@ import {
 } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { IGetOrganizationsQueryString } from "./handlers/organization";
+import { IGetOrganizationsQueryString } from "./models/parameters";
 import * as organizationHandler from "./handlers/organization";
 import * as referentHandler from "./handlers/referent";
 import { queryParamsMiddleware } from "./middlewares/query_params";
