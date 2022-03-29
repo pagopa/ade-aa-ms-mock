@@ -311,7 +311,6 @@ definitions:
             $ref: "#/definitions/Timestamp"
         required:
           - pec
-          - insertedAt
 
   Referents:
     type: array
