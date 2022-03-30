@@ -1,24 +1,41 @@
-import { BlobServiceClient } from "@azure/storage-blob";
-import { FiscalCode, NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import * as A from "fp-ts/lib/Array";
-import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Companies } from "../../generated/definitions/Companies";
-import { getBlobData } from "../utils/blob";
-import { UsersCompanies } from "../utils/types";
+import { Referent } from "../models/dbModels";
+import { Company } from "../../generated/definitions/Company";
 
 export const getCompanies = (
-  fiscalCode: FiscalCode,
-  blobServiceClient: BlobServiceClient,
-  containerName: NonEmptyString,
-  blobName: NonEmptyString
+  fiscalCode: FiscalCode
 ): TE.TaskEither<Error, O.Option<Companies>> =>
   pipe(
-    getBlobData(blobServiceClient, containerName, blobName, UsersCompanies),
-    TE.map(
-      A.findFirstMap(elem =>
-        elem.fiscalCode === fiscalCode ? O.some(elem.companies) : O.none
+    TE.tryCatch(
+      async () =>
+        Referent.findByPk(fiscalCode, {
+          include: [Referent.associations.organizations]
+        }),
+      E.toError
+    ),
+    TE.map(maybeReferent =>
+      pipe(
+        O.fromNullable(maybeReferent),
+        O.map(ref =>
+          pipe(
+            ref.organizations,
+            A.map(org =>
+              Company.decode({
+                fiscalCode: org.fiscalCode,
+                organizationName: org.name,
+                pec: org.pec
+              })
+            ),
+            A.filter(E.isRight),
+            A.map(comp => comp.right)
+          )
+        )
       )
     )
   );

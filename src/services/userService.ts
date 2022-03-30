@@ -8,6 +8,7 @@ import { UserCompanies } from "../../generated/definitions/UserCompanies";
 import { getBlobData, upsertBlob } from "../utils/blob";
 import { UsersCompanies } from "../utils/types";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const upsertUser = (
   userCompanies: UserCompanies,
   blobServiceClient: BlobServiceClient,

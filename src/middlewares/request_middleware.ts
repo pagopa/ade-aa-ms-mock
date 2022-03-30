@@ -4,6 +4,7 @@ import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Response } from "../utils/response";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const withRequestMiddlewares = (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -21,6 +22,7 @@ export const withRequestMiddlewares = (
     TE.toUnion
   )();
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const withDoubleRequestMiddlewares = (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -43,6 +45,7 @@ export const withDoubleRequestMiddlewares = (
     TE.toUnion
   )();
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const withTripleRequestMiddlewares = (
   request: FastifyRequest,
   reply: FastifyReply,

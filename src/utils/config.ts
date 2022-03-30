@@ -18,12 +18,15 @@ import * as t from "io-ts";
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.interface({
+  isPostgresSslEnabled: t.boolean,
   isProduction: t.boolean,
 
+  // eslint-disable-next-line sort-keys
+  ATTRIBUTE_AUTHORITY_POSTGRES_DB_URI: NonEmptyString,
   BLOB_NAME: NonEmptyString,
   CONTAINER_NAME: NonEmptyString,
   STORAGE_CONNECTION_STRING: NonEmptyString,
-
+  // eslint-disable-next-line sort-keys
   SERVER_PORT: NonNegativeInteger
 });
 
@@ -35,6 +38,8 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
     IntegerFromString.decode,
     E.getOrElse(() => -1)
   ),
+  isPostgresSslEnabled:
+    process.env.ATTRIBUTE_AUTHORITY_POSTGRES_DB_SSL_ENABLED === "true",
   isProduction: process.env.NODE_ENV === "production"
 });
 
@@ -44,6 +49,7 @@ const errorOrConfig: t.Validation<IConfig> = IConfig.decode({
  *
  * @returns either the configuration values or a list of validation errors
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function getConfig(): t.Validation<IConfig> {
   return errorOrConfig;
 }
@@ -55,6 +61,7 @@ export function getConfig(): t.Validation<IConfig> {
  * @returns the configuration values
  * @throws validation errors found while parsing the application configuration
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function getConfigOrThrow(): IConfig {
   return pipe(
     errorOrConfig,

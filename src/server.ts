@@ -1,16 +1,31 @@
+import { IncomingMessage, Server, ServerResponse } from "http";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance } from "fastify";
 import * as TE from "fp-ts/lib/TaskEither";
-import { IncomingMessage, Server, ServerResponse } from "http";
+import { Sequelize } from "sequelize";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
-import { UserCompanies } from "../generated/definitions/UserCompanies";
+import { OrganizationWithReferents } from "../generated/definitions/OrganizationWithReferents";
+import { ReferentFiscalCode } from "../generated/definitions/ReferentFiscalCode";
+import { KeyOrganizationFiscalCode } from "../generated/definitions/KeyOrganizationFiscalCode";
+import { Organizations } from "../generated/definitions/Organizations";
 import { getCompaniesHandler } from "./handlers/company";
-import { upsertUserHandler } from "./handlers/user";
-import { withRequestMiddlewares } from "./middlewares/request_middleware";
+import {
+  withDoubleRequestMiddlewares,
+  withRequestMiddlewares
+} from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { initializeCompaniesBlob } from "./utils/startup";
+import {
+  IDeleteReferentPathParams,
+  IGetOrganizationsQueryString
+} from "./models/parameters";
+import * as organizationHandler from "./handlers/organization";
+import * as referentHandler from "./handlers/referent";
+import { queryParamsMiddleware } from "./middlewares/query_params";
+import { pathParamsMiddleware } from "./middlewares/path_params";
+import { sequelizePostgresOptions } from "./utils/sequelize-options";
+import { initModels } from "./models/dbModels";
 
 const config = getConfigOrThrow();
 
@@ -23,23 +38,120 @@ const server: FastifyInstance<
   ServerResponse
 > = fastify({});
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const blobServiceClient = BlobServiceClient.fromConnectionString(
   config.STORAGE_CONNECTION_STRING
 );
 
-if (!config.isProduction) {
-  initializeCompaniesBlob(
-    blobServiceClient,
-    config.CONTAINER_NAME,
-    config.BLOB_NAME
-  )()
-    // tslint:disable-next-line: no-console
-    .then(() => console.log("Test Blob initialized"))
-    // tslint:disable-next-line: no-console
-    .catch(console.log);
-}
+const attributeAuthorityPostgresDb = new Sequelize(
+  config.ATTRIBUTE_AUTHORITY_POSTGRES_DB_URI,
+  sequelizePostgresOptions()
+);
 
-server.post<{ Body: GetCompaniesBody; Response: Companies }>(
+// Initialize models and sync them
+initModels(attributeAuthorityPostgresDb);
+
+server.get<{
+  readonly Querystring: IGetOrganizationsQueryString;
+  readonly Response: Organizations;
+}>(
+  "/organizations",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        queryParamsMiddleware(IGetOrganizationsQueryString)
+      )
+  },
+  organizationHandler.getOrganizationsHandler()
+);
+
+server.post<{ readonly Body: OrganizationWithReferents }>(
+  "/organizations",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        requiredBodyMiddleware(OrganizationWithReferents)
+      )
+  },
+  organizationHandler.upsertOrganizationHandler()
+);
+
+server.get(
+  "/organization/:keyOrganizationFiscalCode",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      )
+  },
+  organizationHandler.getOrganizationHandler()
+);
+
+server.delete(
+  "/organization/:keyOrganizationFiscalCode",
+  {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      )
+  },
+  organizationHandler.deleteOrganizationHandler()
+);
+
+server.get(
+  "/organization/:keyOrganizationFiscalCode/referents",
+  {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode)
+      )
+  },
+  referentHandler.getReferentsHandler()
+);
+
+server.post<{ readonly Body: ReferentFiscalCode }>(
+  "/organization/:keyOrganizationFiscalCode/referents",
+  {
+    preHandler: async (request, reply) =>
+      withDoubleRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(KeyOrganizationFiscalCode),
+        requiredBodyMiddleware(ReferentFiscalCode)
+      )
+  },
+  referentHandler.insertReferentHandler()
+);
+
+server.delete(
+  "/organization/:keyOrganizationFiscalCode/referents/:referentFiscalCode",
+  {
+    preHandler: async (request, reply) =>
+      withRequestMiddlewares(
+        request,
+        reply,
+        pathParamsMiddleware(IDeleteReferentPathParams)
+      )
+  },
+  referentHandler.deleteReferentHandler()
+);
+
+/**
+ * Legacy endpoint to serve hub-spid-login service
+ */
+server.post<{ readonly Body: GetCompaniesBody; readonly Response: Companies }>(
   "/companies",
   {
     preHandler: async (request, reply) =>
@@ -49,24 +161,7 @@ server.post<{ Body: GetCompaniesBody; Response: Companies }>(
         requiredBodyMiddleware(GetCompaniesBody)
       )
   },
-  getCompaniesHandler(
-    blobServiceClient,
-    config.CONTAINER_NAME,
-    config.BLOB_NAME
-  )
-);
-
-server.post<{ Body: UserCompanies }>(
-  "/user",
-  {
-    preHandler: async (request, reply) =>
-      withRequestMiddlewares(
-        request,
-        reply,
-        requiredBodyMiddleware(UserCompanies)
-      )
-  },
-  upsertUserHandler(blobServiceClient, config.CONTAINER_NAME, config.BLOB_NAME)
+  getCompaniesHandler()
 );
 
 server.get("/ping", {}, (_, reply) => TE.of(reply.code(200).send("OK"))());
@@ -75,6 +170,6 @@ server.listen(config.SERVER_PORT, "0.0.0.0", (err, address) => {
   if (err) {
     process.exit(1);
   }
-  // tslint:disable-next-line: no-console
+  // eslint-disable-next-line no-console
   console.log(`server listening on ${address}`);
 });

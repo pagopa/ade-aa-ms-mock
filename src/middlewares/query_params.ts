@@ -5,12 +5,12 @@ import * as t from "io-ts";
 import { toBadRequestResponse } from "../utils/response";
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const requiredBodyMiddleware = <S, A>(type: t.Type<A, S>) => (
+export const queryParamsMiddleware = <S, A>(type: t.Type<A, S>) => (
   request: FastifyRequest,
   _: FastifyReply
 ) =>
   pipe(
-    request.body,
+    request.query,
     type.decode,
     TE.fromEither,
     TE.mapLeft(toBadRequestResponse)

@@ -54,29 +54,38 @@ export const Response = t.union([
 ]);
 export type Response = t.TypeOf<typeof Response>;
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const toBadRequestResponse = (errs: t.Errors) =>
   BadRequestResponse.encode({
     code: 400,
     error: errorsToReadableMessages(errs).join("/")
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const toInternalServerError = (err: Error) =>
   InternalServerErrorResponse.encode({
     code: 500,
     error: err.message
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const toNotFoundResponse = (message?: string) =>
   NotFoundResponse.encode({
     code: 404,
     detail: message
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const toSuccessJsonResponse = <T>(data: T) =>
   SuccessJsonResponse.encode({
     code: 200,
     data: Object.assign({}, data)
   });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const toFastifyReply = (reply: FastifyReply) => (res: Response) =>
   reply.code(res.code).send(res);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const toSuccessFastifyReply = <T>(reply: FastifyReply) => (result: T) =>
+  reply.code(200).send(result);

@@ -4,3 +4,7 @@ coverage
 dist
 .env
 
+
+# eslint section
+!.eslintrc.js
+.eslintcache
