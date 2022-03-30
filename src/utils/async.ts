@@ -122,7 +122,7 @@ export const flattenAsyncIterator = <T>(
       array = Array.from(value);
     }
     // eslint-disable-next-line functional/immutable-data
-    yield array.shift() as T;
+    yield array.shift();
   }
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

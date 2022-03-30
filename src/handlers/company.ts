@@ -1,20 +1,21 @@
+import { IncomingMessage, Server } from "http";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { IncomingMessage, Server } from "http";
 import { GetCompaniesBody } from "../../generated/definitions/GetCompaniesBody";
 import { getCompanies } from "../services/companyService";
 import {
   toFastifyReply,
   toInternalServerError,
   toNotFoundResponse,
-  toSuccessFastifyReply,
+  toSuccessFastifyReply
 } from "../utils/response";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getCompaniesHandler = () => async (
   request: FastifyRequest<
     {
-      Body: GetCompaniesBody;
+      readonly Body: GetCompaniesBody;
     },
     Server,
     IncomingMessage

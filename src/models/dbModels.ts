@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import {
   Model,
   DataTypes,
@@ -15,35 +16,71 @@ import {
   BelongsToManyHasAssociationMixin,
   BelongsToManyHasAssociationsMixin,
   BelongsToManyCountAssociationsMixin,
-  BelongsToManyCreateAssociationMixin,
+  BelongsToManyCreateAssociationMixin
 } from "sequelize";
 
 export class Organization extends Model<
   InferAttributes<Organization>,
   InferCreationAttributes<Organization>
 > {
-  declare fiscalCode: string;
-  declare name: string;
-  declare pec: string;
-  declare insertedAt: string;
-  declare referents: NonAttribute<Referent[]>;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly fiscalCode: string;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly name: string;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly pec: string;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly insertedAt: string;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly referents: NonAttribute<ReadonlyArray<Referent>>;
 
-  declare getReferents: BelongsToManyGetAssociationsMixin<Referent>;
-  declare addReferent: BelongsToManyAddAssociationMixin<Referent, string>;
-  declare addReferents: BelongsToManyAddAssociationsMixin<Referent, string>;
-  declare setReferents: BelongsToManySetAssociationsMixin<Referent, string>;
-  declare removeReferent: BelongsToManyRemoveAssociationMixin<Referent, string>;
-  declare removeReferents: BelongsToManyRemoveAssociationsMixin<
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly getReferents: BelongsToManyGetAssociationsMixin<Referent>;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly addReferent: BelongsToManyAddAssociationMixin<
     Referent,
     string
   >;
-  declare hasReferent: BelongsToManyHasAssociationMixin<Referent, string>;
-  declare hasReferents: BelongsToManyHasAssociationsMixin<Referent, string>;
-  declare countReferents: BelongsToManyCountAssociationsMixin;
-  declare createReferent: BelongsToManyCreateAssociationMixin<Referent>;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly addReferents: BelongsToManyAddAssociationsMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly setReferents: BelongsToManySetAssociationsMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly removeReferent: BelongsToManyRemoveAssociationMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly removeReferents: BelongsToManyRemoveAssociationsMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly hasReferent: BelongsToManyHasAssociationMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly hasReferents: BelongsToManyHasAssociationsMixin<
+    Referent,
+    string
+  >;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly countReferents: BelongsToManyCountAssociationsMixin;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly createReferent: BelongsToManyCreateAssociationMixin<
+    Referent
+  >;
 
-  declare static associations: {
-    referents: Association<Organization, Referent>;
+  // eslint-disable-next-line @typescript-eslint/member-ordering, @typescript-eslint/explicit-member-accessibility
+  declare static readonly associations: {
+    readonly referents: Association<Organization, Referent>;
   };
 }
 
@@ -51,36 +88,44 @@ export class Referent extends Model<
   InferAttributes<Referent>,
   InferCreationAttributes<Referent>
 > {
-  declare fiscalCode: string;
-  declare organizations: NonAttribute<Organization[]>;
-  declare static associations: {
-    organizations: Association<Referent, Organization>;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly fiscalCode: string;
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  declare readonly organizations: NonAttribute<ReadonlyArray<Organization>>;
+  // eslint-disable-next-line @typescript-eslint/member-ordering, @typescript-eslint/explicit-member-accessibility
+  declare static readonly associations: {
+    readonly organizations: Association<Referent, Organization>;
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const initModels = (db: Sequelize) => {
   Organization.init(
     {
       fiscalCode: {
         type: DataTypes.STRING(16),
-        primaryKey: true,
+        // eslint-disable-next-line sort-keys
+        primaryKey: true
       },
       name: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING(100)
       },
       pec: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING(100)
       },
+      // eslint-disable-next-line sort-keys
       insertedAt: {
         type: DataTypes.DATE,
-        defaultValue: new Date(),
-      },
+        // eslint-disable-next-line sort-keys
+        defaultValue: new Date()
+      }
     },
     {
       sequelize: db,
+      // eslint-disable-next-line sort-keys
       modelName: "organization",
       timestamps: false,
-      underscored: true,
+      underscored: true
     }
   );
 
@@ -88,24 +133,27 @@ export const initModels = (db: Sequelize) => {
     {
       fiscalCode: {
         type: DataTypes.STRING(16),
-        primaryKey: true,
-      },
+        // eslint-disable-next-line sort-keys
+        primaryKey: true
+      }
     },
     {
       sequelize: db,
+      // eslint-disable-next-line sort-keys
       modelName: "referent",
       timestamps: false,
-      underscored: true,
+      underscored: true
     }
   );
 
-  Organization.associations.referents = Organization.belongsToMany(Referent, {
-    through: "organizations_referents",
+  Organization.belongsToMany(Referent, {
+    through: "organizations_referents"
   });
 
-  Referent.associations.organizations = Referent.belongsToMany(Organization, {
-    through: "organizations_referents",
+  Referent.belongsToMany(Organization, {
+    through: "organizations_referents"
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   db.sync({ alter: true });
 };

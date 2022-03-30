@@ -22,6 +22,7 @@ export const upsertBlob = (
           .upload(content, content.length),
       E.toError
     ),
+    // eslint-disable-next-line no-underscore-dangle
     TE.map(uploadResponse => uploadResponse._response),
     TE.filterOrElse(
       response => response.status >= 200 && response.status < 300,
@@ -30,6 +31,7 @@ export const upsertBlob = (
     TE.map(() => true)
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getBlobData = <S, A>(
   blobServiceClient: BlobServiceClient,
   containerName: NonEmptyString,

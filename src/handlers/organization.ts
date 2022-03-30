@@ -1,28 +1,32 @@
+import { IncomingMessage, Server, ServerResponse } from "http";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { pipe } from "fp-ts/lib/function";
-import { IncomingMessage, Server, ServerResponse } from "http";
 import * as TE from "fp-ts/TaskEither";
+import { RouteGenericInterface } from "fastify/types/route";
 import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
 import {
   deleteOrganization,
   getOrganization,
   getOrganizations,
-  upsertOrganization,
+  upsertOrganization
 } from "../services/organizationService";
 import {
   toFastifyReply,
   toInternalServerError,
   toNotFoundResponse,
-  toSuccessFastifyReply,
+  toSuccessFastifyReply
 } from "../utils/response";
-import { RouteGenericInterface } from "fastify/types/route";
 import { Organizations } from "../../generated/definitions/Organizations";
 import { IGetOrganizationsQueryString } from "../models/parameters";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getOrganizationsHandler = () => async (
   request: FastifyRequest<
-    { Querystring: IGetOrganizationsQueryString; Response: Organizations },
+    {
+      readonly Querystring: IGetOrganizationsQueryString;
+      readonly Response: Organizations;
+    },
     Server,
     IncomingMessage
   >,
@@ -47,10 +51,11 @@ export const getOrganizationsHandler = () => async (
     TE.toUnion
   )();
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const upsertOrganizationHandler = () => async (
   request: FastifyRequest<
     {
-      Body: OrganizationWithReferents;
+      readonly Body: OrganizationWithReferents;
     },
     Server,
     IncomingMessage
@@ -64,10 +69,11 @@ export const upsertOrganizationHandler = () => async (
     TE.toUnion
   )();
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getOrganizationHandler = () => async (
   request: FastifyRequest<
     {
-      Params: KeyOrganizationFiscalCode;
+      readonly Params: KeyOrganizationFiscalCode;
     },
     Server,
     IncomingMessage
@@ -84,16 +90,18 @@ export const getOrganizationHandler = () => async (
     TE.toUnion
   )();
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const deleteOrganizationHandler = () => async (
   request: FastifyRequest<
     {
-      Params: KeyOrganizationFiscalCode;
+      readonly Params: KeyOrganizationFiscalCode;
     },
     Server,
     IncomingMessage
   >,
   reply: FastifyReply
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   pipe(
     deleteOrganization(request.params.keyOrganizationFiscalCode),
     TE.mapLeft(toInternalServerError),

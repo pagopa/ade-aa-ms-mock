@@ -1,10 +1,10 @@
+import * as fs from "fs";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import { toError } from "fp-ts/lib/Either";
 import { flow, pipe } from "fp-ts/lib/function";
 import { parse } from "fp-ts/lib/Json";
 import * as TE from "fp-ts/lib/TaskEither";
-import * as fs from "fs";
 import { upsertBlob } from "./blob";
 import { errorsToError } from "./errorsFormatter";
 import { UsersCompanies } from "./types";
@@ -25,6 +25,7 @@ export const parseUsers = (): TE.TaskEither<Error, UsersCompanies> =>
     )
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const initializeCompaniesBlob = (
   blobServiceClient: BlobServiceClient,
   containerName: NonEmptyString,

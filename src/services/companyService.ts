@@ -15,25 +15,25 @@ export const getCompanies = (
     TE.tryCatch(
       async () =>
         Referent.findByPk(fiscalCode, {
-          include: [Referent.associations.organizations],
+          include: [Referent.associations.organizations]
         }),
       E.toError
     ),
-    TE.map((maybeReferent) =>
+    TE.map(maybeReferent =>
       pipe(
         O.fromNullable(maybeReferent),
-        O.map((ref) =>
+        O.map(ref =>
           pipe(
             ref.organizations,
-            A.map((org) =>
+            A.map(org =>
               Company.decode({
                 fiscalCode: org.fiscalCode,
                 organizationName: org.name,
-                pec: org.pec,
+                pec: org.pec
               })
             ),
             A.filter(E.isRight),
-            A.map((comp) => comp.right)
+            A.map(comp => comp.right)
           )
         )
       )

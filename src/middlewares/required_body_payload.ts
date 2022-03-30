@@ -4,6 +4,7 @@ import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { toBadRequestResponse } from "../utils/response";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const requiredBodyMiddleware = <S, A>(type: t.Type<A, S>) => (
   request: FastifyRequest,
   _: FastifyReply

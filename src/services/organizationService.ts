@@ -3,47 +3,53 @@ import { identity, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as E from "fp-ts/lib/Either";
 import * as TE from "fp-ts/lib/TaskEither";
+import { Op, QueryTypes } from "sequelize";
+import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
 import { Organizations } from "../../generated/definitions/Organizations";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
 import {
   Organization as OrganizationModel,
-  Referent,
+  Referent
 } from "../models/dbModels";
-import { Op, QueryTypes } from "sequelize";
 import { UpdateOrganizationPrimaryKey } from "../utils/postgres_queries";
-import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import {
   ISortByOrganizations,
-  ISortDirectionOrganizations,
+  ISortDirectionOrganizations
 } from "../models/parameters";
-import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const filterByNameOrFiscalCode = (searchQuery?: string) =>
   pipe(
     O.fromNullable(searchQuery),
-    O.map((searchQuery) => ({
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    O.map(searchQuery => ({
       where: {
         [Op.or]: [
           { fiscal_code: { [Op.iLike]: `%${searchQuery}%` } },
-          { name: { [Op.iLike]: `%${searchQuery}%` } },
-        ],
-      },
+          { name: { [Op.iLike]: `%${searchQuery}%` } }
+        ]
+      }
     })),
     O.getOrElse(() => ({}))
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const paging = (page?: NumberFromString, pageSize?: NumberFromString) =>
   pipe(
     O.Do,
     O.bind("page", () => O.fromNullable(page)),
     O.bind("pageSize", () => O.fromNullable(pageSize)),
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     O.map(({ page, pageSize }) => ({
       offset: page * pageSize,
-      limit: pageSize,
+      // eslint-disable-next-line sort-keys
+      limit: pageSize
     })),
     O.getOrElse(() => ({}))
   );
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const ordering = (
   by?: ISortByOrganizations,
   direction?: ISortDirectionOrganizations
@@ -52,8 +58,9 @@ const ordering = (
     O.Do,
     O.bind("by", () => O.fromNullable(by)),
     O.bind("order", () => O.fromNullable(direction)),
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     O.map(({ by, order }) => ({
-      order: [[by, order]],
+      order: [[by, order]]
     })),
     O.getOrElse(() => ({}))
   );
@@ -74,7 +81,7 @@ export const getOrganizations = (
             include: [OrganizationModel.associations.referents],
             ...filterByNameOrFiscalCode(searchQuery),
             ...paging(page, pageSize),
-            ...ordering(sortBy, sortDirection),
+            ...ordering(sortBy, sortDirection)
           }),
         E.toError
       )
@@ -85,7 +92,7 @@ export const getOrganizations = (
           OrganizationModel.count({
             ...filterByNameOrFiscalCode(searchQuery),
             ...paging(page, pageSize),
-            ...ordering(sortBy, sortDirection),
+            ...ordering(sortBy, sortDirection)
           }),
         E.toError
       )
@@ -93,20 +100,22 @@ export const getOrganizations = (
     TE.map(({ organizations, count }) =>
       pipe(
         organizations,
-        AR.map((m) => ({
+        AR.map(m => ({
           keyOrganizationFiscalCode: m.fiscalCode,
           organizationFiscalCode: m.fiscalCode,
           organizationName: m.name,
           pec: m.pec,
+          // eslint-disable-next-line sort-keys
           insertedAt: m.insertedAt,
-          referents: m.referents.map((r) => r.fiscalCode),
+          referents: m.referents.map(r => r.fiscalCode)
         })),
-        (items) => ({
+        items => ({
           items,
-          count,
+          // eslint-disable-next-line sort-keys
+          count
         }),
         Organizations.decode,
-        E.bimap((_) => E.toError("Cannot decode response"), identity),
+        E.bimap(_ => E.toError("Cannot decode response"), identity),
         E.toUnion
       )
     )
@@ -125,10 +134,9 @@ export const upsertOrganization = (
           raw: true,
           replacements: {
             new_fiscal_code: organizationWithReferents.organizationFiscalCode,
-            old_fiscal_code:
-              organizationWithReferents.keyOrganizationFiscalCode,
+            old_fiscal_code: organizationWithReferents.keyOrganizationFiscalCode
           },
-          type: QueryTypes.UPDATE,
+          type: QueryTypes.UPDATE
         });
       }
     }, E.toError),
@@ -138,7 +146,7 @@ export const upsertOrganization = (
           OrganizationModel.upsert({
             fiscalCode: organizationWithReferents.organizationFiscalCode,
             name: organizationWithReferents.organizationName,
-            pec: organizationWithReferents.pec,
+            pec: organizationWithReferents.pec
           }),
         E.toError
       )
@@ -146,28 +154,28 @@ export const upsertOrganization = (
     TE.chain(([organization, _]) =>
       pipe(
         TE.tryCatch(() => organization.getReferents(), E.toError),
-        TE.chain((referentsToRemove) =>
+        TE.chain(referentsToRemove =>
           TE.tryCatch(
             () =>
               organization.removeReferents(referentsToRemove, {
-                force: true,
+                force: true
               }),
             E.toError
           )
         ),
         TE.chain(() =>
           TE.sequenceArray(
-            organizationWithReferents.referents.map((r) =>
+            organizationWithReferents.referents.map(r =>
               TE.tryCatch(() => Referent.upsert({ fiscalCode: r }), E.toError)
             )
           )
         ),
-        TE.map((r) => r.map((e) => e[0])),
-        TE.chain((referents) =>
+        TE.map(r => r.map(e => e[0])),
+        TE.chain(referents =>
           TE.tryCatch(
             () =>
               organization.addReferents(referents, {
-                ignoreDuplicates: true,
+                ignoreDuplicates: true
               }),
             E.toError
           )
@@ -179,8 +187,9 @@ export const upsertOrganization = (
               organizationFiscalCode: organization.fiscalCode,
               organizationName: organization.name,
               pec: organization.pec,
+              // eslint-disable-next-line sort-keys
               insertedAt: organization.insertedAt,
-              referents: organizationWithReferents.referents,
+              referents: organizationWithReferents.referents
             }),
             E.mapLeft(E.toError),
             TE.fromEither
@@ -197,25 +206,26 @@ export const getOrganization = (
     TE.tryCatch(
       () =>
         OrganizationModel.findByPk(keyOrganizationFiscalCode, {
-          include: [OrganizationModel.associations.referents],
+          include: [OrganizationModel.associations.referents]
         }),
       E.toError
     ),
-    TE.map((maybeOrganizationModel) =>
+    TE.map(maybeOrganizationModel =>
       pipe(
         O.fromNullable(maybeOrganizationModel),
-        O.chain((org) =>
+        O.chain(org =>
           pipe(
             OrganizationWithReferents.decode({
               keyOrganizationFiscalCode: org.fiscalCode,
               organizationFiscalCode: org.fiscalCode,
               organizationName: org.name,
               pec: org.pec,
+              // eslint-disable-next-line sort-keys
               insertedAt: org.insertedAt,
-              referents: org.referents.map((r) => r.fiscalCode),
+              referents: org.referents.map(r => r.fiscalCode)
             }),
             O.fromPredicate(E.isRight),
-            O.map((o) => o.right)
+            O.map(o => o.right)
           )
         )
       )
@@ -227,22 +237,23 @@ export const deleteOrganization = (
 ): TE.TaskEither<Error, O.Option<Promise<void>>> =>
   pipe(
     TE.tryCatch(
+      // eslint-disable-next-line sonarjs/no-identical-functions
       () =>
         OrganizationModel.findByPk(keyOrganizationFiscalCode, {
-          include: [OrganizationModel.associations.referents],
+          include: [OrganizationModel.associations.referents]
         }),
       E.toError
     ),
-    TE.chain((maybeOrganizationModel) =>
+    TE.chain(maybeOrganizationModel =>
       pipe(
         O.fromNullable(maybeOrganizationModel),
         TE.of,
-        TE.chain((organizationModel) =>
+        TE.chain(organizationModel =>
           TE.tryCatch(
             async () =>
               pipe(
                 organizationModel,
-                O.map(async (org) => await org.destroy())
+                O.map(async org => await org.destroy())
               ),
             E.toError
           )
