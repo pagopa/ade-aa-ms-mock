@@ -1,4 +1,4 @@
-FROM circleci/node:12.18.0 as builder
+FROM circleci/node:14.16.0 as builder
 
 RUN sudo apt-get -y install --no-install-recommends libunwind8=1.1-4.1
 
@@ -14,7 +14,7 @@ RUN sudo chmod -R 777 /usr/src/app \
   && yarn install \
   && yarn build
 
-FROM node:12.18.0-alpine
+FROM node:14.16.0-alpine
 LABEL maintainer="https://pagopa.gov.it"
 
 WORKDIR /usr/src/app
