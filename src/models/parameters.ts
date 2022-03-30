@@ -2,6 +2,8 @@ import * as t from "io-ts";
 import { withDefault } from "@pagopa/ts-commons/lib/types";
 import { WithinRangeString } from "@pagopa/ts-commons/lib/strings";
 import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
+import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
+import { ReferentFiscalCode } from "../../generated/definitions/ReferentFiscalCode";
 
 export const ISortByOrganizations = t.union([
   t.literal("fiscalCode"),
@@ -32,3 +34,6 @@ export const IGetOrganizationsQueryString = t.partial({
 export type IGetOrganizationsQueryString = t.TypeOf<
   typeof IGetOrganizationsQueryString
 >;
+
+export const IDeleteReferentPathParams = t.intersection([KeyOrganizationFiscalCode ,ReferentFiscalCode]);
+export type IDeleteReferentPathParams = t.TypeOf <typeof IDeleteReferentPathParams>;

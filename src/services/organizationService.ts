@@ -134,7 +134,7 @@ export const upsertOrganization = (
     }, E.toError),
     TE.chain(() =>
       TE.tryCatch(
-        async () =>
+        () =>
           OrganizationModel.upsert({
             fiscalCode: organizationWithReferents.organizationFiscalCode,
             name: organizationWithReferents.organizationName,
@@ -145,33 +145,28 @@ export const upsertOrganization = (
     ),
     TE.chain(([organization, _]) =>
       pipe(
-        TE.tryCatch(async () => await organization.getReferents(), E.toError),
+        TE.tryCatch(() => organization.getReferents(), E.toError),
         TE.chain((referentsToRemove) =>
           TE.tryCatch(
-            async () =>
-              await organization.removeReferents(referentsToRemove, {
+            () =>
+              organization.removeReferents(referentsToRemove, {
                 force: true,
               }),
             E.toError
           )
         ),
         TE.chain(() =>
-          TE.tryCatch(
-            async () =>
-              (
-                await Promise.all(
-                  organizationWithReferents.referents.map((r) =>
-                    Referent.upsert({ fiscalCode: r })
-                  )
-                )
-              ).map(([r, _]) => r),
-            E.toError
+          TE.sequenceArray(
+            organizationWithReferents.referents.map((r) =>
+              TE.tryCatch(() => Referent.upsert({ fiscalCode: r }), E.toError)
+            )
           )
         ),
+        TE.map((r) => r.map((e) => e[0])),
         TE.chain((referents) =>
           TE.tryCatch(
-            async () =>
-              await organization.addReferents(referents, {
+            () =>
+              organization.addReferents(referents, {
                 ignoreDuplicates: true,
               }),
             E.toError

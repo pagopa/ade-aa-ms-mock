@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { IncomingMessage, Server } from "http";
 import { KeyOrganizationFiscalCode } from "../../generated/definitions/KeyOrganizationFiscalCode";
 import { ReferentFiscalCode } from "../../generated/definitions/ReferentFiscalCode";
+import { IDeleteReferentPathParams } from "../models/parameters";
 
 export const getReferentsHandler = () => async (
   request: FastifyRequest<
@@ -34,8 +35,7 @@ export const insertReferentHandler = () => async (
 export const deleteReferentHandler = () => async (
   request: FastifyRequest<
     {
-      Params: KeyOrganizationFiscalCode;
-      Body: ReferentFiscalCode;
+      Params: IDeleteReferentPathParams;
     },
     Server,
     IncomingMessage
@@ -43,5 +43,5 @@ export const deleteReferentHandler = () => async (
   reply: FastifyReply
 ) => {
   const keyOrganizationFiscalCode = request.params.keyOrganizationFiscalCode;
-  const referentFiscalCode = request.body.referentFiscalCode;
+  const referentFiscalCode = request.params.referentFiscalCode;
 };

@@ -14,7 +14,7 @@ import {
 } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
-import { IGetOrganizationsQueryString } from "./models/parameters";
+import { IDeleteReferentPathParams, IGetOrganizationsQueryString } from "./models/parameters";
 import * as organizationHandler from "./handlers/organization";
 import * as referentHandler from "./handlers/referent";
 import { queryParamsMiddleware } from "./middlewares/query_params";
@@ -129,15 +129,14 @@ server.post<{ Body: ReferentFiscalCode }>(
   referentHandler.insertReferentHandler()
 );
 
-server.delete<{ Body: ReferentFiscalCode }>(
-  "/organization/:keyOrganizationFiscalCode/referents",
+server.delete(
+  "/organization/:keyOrganizationFiscalCode/referents/:referentFiscalCode",
   {
     preHandler: async (request, reply) =>
-      withDoubleRequestMiddlewares(
+      withRequestMiddlewares(
         request,
         reply,
-        pathParamsMiddleware(KeyOrganizationFiscalCode),
-        requiredBodyMiddleware(ReferentFiscalCode)
+        pathParamsMiddleware(IDeleteReferentPathParams),
       ),
   },
   referentHandler.deleteReferentHandler()
