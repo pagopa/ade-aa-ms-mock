@@ -4,7 +4,6 @@ import * as O from "fp-ts/lib/Option";
 import * as E from "fp-ts/lib/Either";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Op, QueryTypes } from "sequelize";
-import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
 import { Organizations } from "../../generated/definitions/Organizations";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
@@ -200,7 +199,7 @@ export const upsertOrganization = (
   );
 
 export const getOrganization = (
-  keyOrganizationFiscalCode: FiscalCode
+  keyOrganizationFiscalCode: string
 ): TE.TaskEither<Error, O.Option<OrganizationWithReferents>> =>
   pipe(
     TE.tryCatch(
@@ -233,7 +232,7 @@ export const getOrganization = (
   );
 
 export const deleteOrganization = (
-  keyOrganizationFiscalCode: FiscalCode
+  keyOrganizationFiscalCode: string
 ): TE.TaskEither<Error, O.Option<Promise<void>>> =>
   pipe(
     TE.tryCatch(
@@ -244,20 +243,15 @@ export const deleteOrganization = (
         }),
       E.toError
     ),
-    TE.chain(maybeOrganizationModel =>
-      pipe(
-        O.fromNullable(maybeOrganizationModel),
-        TE.of,
-        TE.chain(organizationModel =>
-          TE.tryCatch(
-            async () =>
-              pipe(
-                organizationModel,
-                O.map(async org => await org.destroy())
-              ),
-            E.toError
-          )
-        )
+    TE.map(O.fromNullable),
+    TE.chain(organizationModelOption =>
+      TE.tryCatch(
+        async () =>
+          pipe(
+            organizationModelOption,
+            O.map(org => org.destroy({ force: true }))
+          ),
+        E.toError
       )
     )
   );
