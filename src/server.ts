@@ -26,6 +26,7 @@ import { queryParamsMiddleware } from "./middlewares/query_params";
 import { pathParamsMiddleware } from "./middlewares/path_params";
 import { sequelizePostgresOptions } from "./utils/sequelize-options";
 import { initModels } from "./models/dbModels";
+import { OrganizationWithReferentsPost } from "../generated/definitions/OrganizationWithReferentsPost";
 
 const config = getConfigOrThrow();
 
@@ -67,14 +68,14 @@ server.get<{
   organizationHandler.getOrganizationsHandler()
 );
 
-server.post<{ readonly Body: OrganizationWithReferents }>(
+server.post<{ readonly Body: OrganizationWithReferentsPost }>(
   "/organizations",
   {
     preHandler: async (request, reply) =>
       withRequestMiddlewares(
         request,
         reply,
-        requiredBodyMiddleware(OrganizationWithReferents)
+        requiredBodyMiddleware(OrganizationWithReferentsPost)
       )
   },
   organizationHandler.upsertOrganizationHandler()
