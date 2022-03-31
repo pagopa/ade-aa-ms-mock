@@ -41,7 +41,7 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: "#/definitions/OrganizationWithReferents"
+            $ref: "#/definitions/OrganizationWithReferentsPost"
       responses:
         "200":
           description: Upserted organization.
@@ -307,8 +307,6 @@ definitions:
         properties:
           pec:
             $ref: "#/definitions/EmailAddress"
-          insertedAt:
-            $ref: "#/definitions/Timestamp"
         required:
           - pec
 
@@ -317,7 +315,7 @@ definitions:
     items:
       $ref: "#/definitions/FiscalCode"
 
-  OrganizationWithReferents:
+  OrganizationWithReferentsPost:
     allOf:
       - $ref: "#/definitions/KeyOrganizationFiscalCode"
       - $ref: "#/definitions/Organization"
@@ -327,6 +325,16 @@ definitions:
             $ref: "#/definitions/Referents"
         required:
           - referents
+
+  OrganizationWithReferents:
+    allOf:
+      - $ref: "#/definitions/OrganizationWithReferentsPost"
+      - type: object
+        properties:
+          insertedAt:
+            $ref: "#/definitions/Timestamp"
+        required:
+          - insertedAt
 
   Organizations:
     type: object
