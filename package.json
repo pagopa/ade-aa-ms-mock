@@ -14,6 +14,7 @@
     "prebuild": "shx rm -rf dist && yarn generate",
     "build": "tsc",
     "start": "node dist/src/server.js",
+    "start:local": "node -r dotenv/config dist/src/server.js",
     "dev": "nodemon -r dotenv/config --inspect=0.0.0.0 dist/src/server.js",
     "generate": "npm-run-all generate:*",
     "generate:definitions": "shx rm -rf generated/definitions && gen-api-models --api-spec openapi/index.yaml --out-dir generated/definitions",

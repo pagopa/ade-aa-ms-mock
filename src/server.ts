@@ -5,10 +5,10 @@ import * as TE from "fp-ts/lib/TaskEither";
 import { Sequelize } from "sequelize";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
-import { OrganizationWithReferents } from "../generated/definitions/OrganizationWithReferents";
 import { ReferentFiscalCode } from "../generated/definitions/ReferentFiscalCode";
 import { KeyOrganizationFiscalCode } from "../generated/definitions/KeyOrganizationFiscalCode";
 import { Organizations } from "../generated/definitions/Organizations";
+import { OrganizationWithReferentsPost } from "../generated/definitions/OrganizationWithReferentsPost";
 import { getCompaniesHandler } from "./handlers/company";
 import {
   withDoubleRequestMiddlewares,
@@ -26,7 +26,6 @@ import { queryParamsMiddleware } from "./middlewares/query_params";
 import { pathParamsMiddleware } from "./middlewares/path_params";
 import { sequelizePostgresOptions } from "./utils/sequelize-options";
 import { initModels } from "./models/dbModels";
-import { OrganizationWithReferentsPost } from "../generated/definitions/OrganizationWithReferentsPost";
 
 const config = getConfigOrThrow();
 
