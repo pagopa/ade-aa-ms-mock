@@ -13,6 +13,8 @@ schemes:
 paths:
   "/organizations":
     get:
+      produces:
+        - application/json
       operationId: getOrganizations
       tags:
         - AttributeAuthority
@@ -36,6 +38,10 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
     post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
       operationId: upsertOrganization
       tags:
         - AttributeAuthority
@@ -60,6 +66,8 @@ paths:
 
   "/organization/{keyOrganizationFiscalCode}":
     get:
+      produces:
+        - application/json
       operationId: getOrganization
       tags:
         - AttributeAuthority
@@ -79,6 +87,8 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
     delete:
+      produces:
+        - application/json
       operationId: deleteOrganization
       tags:
         - AttributeAuthority
@@ -98,6 +108,8 @@ paths:
 
   "/organization/{keyOrganizationFiscalCode}/referents":
     get:
+      produces:
+        - application/json
       operationId: getReferents
       tags:
         - AttributeAuthority
@@ -117,6 +129,10 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
     post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
       operationId: insertReferent
       tags:
         - AttributeAuthority
@@ -137,6 +153,8 @@ paths:
 
   "/organization/{keyOrganizationFiscalCode}/referents/{referentFiscalCode}":
     delete:
+      produces:
+        - application/json
       operationId: deleteReferent
       tags:
         - AttributeAuthority
@@ -157,6 +175,10 @@ paths:
 
   "/companies":
     post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
       operationId: getUserCompanies
       summary: |
         Get User Companies
@@ -181,6 +203,8 @@ paths:
 
   "/ping":
     get:
+      produces:
+        - application/json
       operationId: ping
       summary: |
         Ping
@@ -193,11 +217,6 @@ paths:
           description: Service unavailable.
           schema:
             $ref: "#/definitions/ProblemJson"
-
-consumes:
-  - application/json
-produces:
-  - application/json
 
 parameters:
   KeyOrganizationFiscalCode:
