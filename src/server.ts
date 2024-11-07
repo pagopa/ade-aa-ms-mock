@@ -51,6 +51,14 @@ const attributeAuthorityPostgresDb = new Sequelize(
 // Initialize models and sync them
 initModels(attributeAuthorityPostgresDb);
 
+server.addContentTypeParser(
+  "application/json",
+  { bodyLimit: 0 },
+  (_request, _payload, done) => {
+    done(null, null);
+  }
+);
+
 server.get<{
   readonly Querystring: IGetOrganizationsQueryString;
   readonly Response: Organizations;
