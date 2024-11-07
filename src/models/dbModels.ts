@@ -18,6 +18,7 @@ import {
   BelongsToManyCountAssociationsMixin,
   BelongsToManyCreateAssociationMixin
 } from "sequelize";
+import sequelize = require("sequelize");
 
 export class Organization extends Model<
   InferAttributes<Organization>,
@@ -117,7 +118,7 @@ export const initModels = (db: Sequelize) => {
       insertedAt: {
         type: DataTypes.DATE,
         // eslint-disable-next-line sort-keys
-        defaultValue: new Date()
+        defaultValue: sequelize.NOW
       }
     },
     {

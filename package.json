@@ -48,7 +48,6 @@
   "dependencies": {
     "@azure/storage-blob": "^12.5.0",
     "@pagopa/ts-commons": "^12.2.0",
-    "date-fns": "^2.16.1",
     "fastify": "^3.27.4",
     "fastify-cli": "^2.15.0",
     "fp-ts": "^2.11.0",
