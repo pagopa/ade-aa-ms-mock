@@ -16,6 +16,7 @@ import {
   ISortByOrganizations,
   ISortDirectionOrganizations
 } from "../models/parameters";
+import { insertAt } from "fp-ts/lib/NonEmptyArray";
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const filterByNameOrFiscalCode = (searchQuery?: string) =>
@@ -145,7 +146,8 @@ export const upsertOrganization = (
           OrganizationModel.upsert({
             fiscalCode: organizationWithReferents.organizationFiscalCode,
             name: organizationWithReferents.organizationName,
-            pec: organizationWithReferents.pec
+            pec: organizationWithReferents.pec,
+            insertedAt: new Date()
           }),
         E.toError
       )
