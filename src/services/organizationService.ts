@@ -5,6 +5,7 @@ import * as E from "fp-ts/lib/Either";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Op, QueryTypes } from "sequelize";
 import { NumberFromString } from "@pagopa/ts-commons/lib/numbers";
+import { format } from "date-fns";
 import { Organizations } from "../../generated/definitions/Organizations";
 import { OrganizationWithReferents } from "../../generated/definitions/OrganizationWithReferents";
 import {
@@ -16,7 +17,6 @@ import {
   ISortByOrganizations,
   ISortDirectionOrganizations
 } from "../models/parameters";
-import { insertAt } from "fp-ts/lib/NonEmptyArray";
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const filterByNameOrFiscalCode = (searchQuery?: string) =>
@@ -145,9 +145,9 @@ export const upsertOrganization = (
         () =>
           OrganizationModel.upsert({
             fiscalCode: organizationWithReferents.organizationFiscalCode,
+            insertedAt: format(new Date(), "yyyy-MM-dd"),
             name: organizationWithReferents.organizationName,
-            pec: organizationWithReferents.pec,
-            insertedAt: new Date()
+            pec: organizationWithReferents.pec
           }),
         E.toError
       )
