@@ -51,6 +51,19 @@ const attributeAuthorityPostgresDb = new Sequelize(
 // Initialize models and sync them
 initModels(attributeAuthorityPostgresDb);
 
+server.addHook("preParsing", (request, reply, payload, done) => {
+  if (
+    ["POST", "DELETE"].includes(request.method) &&
+    request.headers["content-type"] === "application/json" &&
+    request.headers["content-length"] === "0"
+  ) {
+    // eslint-disable-next-line fp/no-delete, functional/immutable-data
+    delete request.headers["content-type"];
+  }
+
+  done();
+});
+
 server.get<{
   readonly Querystring: IGetOrganizationsQueryString;
   readonly Response: Organizations;
