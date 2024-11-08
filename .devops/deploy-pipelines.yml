@@ -94,6 +94,7 @@ stages:
 
   # Prepare_artifact
   - stage: Prepare_artifact
+    condition: true
     jobs:
       - job: 'prepare_artifact'
         steps:
