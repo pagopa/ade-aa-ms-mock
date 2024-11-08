@@ -12,13 +12,13 @@ import { OrganizationWithReferentsPost } from "../generated/definitions/Organiza
 import { getCompaniesHandler } from "./handlers/company";
 import {
   withDoubleRequestMiddlewares,
-  withRequestMiddlewares
+  withRequestMiddlewares,
 } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
 import {
   IDeleteReferentPathParams,
-  IGetOrganizationsQueryString
+  IGetOrganizationsQueryString,
 } from "./models/parameters";
 import * as organizationHandler from "./handlers/organization";
 import * as referentHandler from "./handlers/referent";
@@ -51,6 +51,21 @@ const attributeAuthorityPostgresDb = new Sequelize(
 // Initialize models and sync them
 initModels(attributeAuthorityPostgresDb);
 
+server.addContentTypeParser("application/json", { parseAs: "string" }, function(
+  _,
+  body,
+  done
+) {
+  try {
+    if (!body) done(null, null);
+    var json = JSON.parse(body);
+    done(null, json);
+  } catch (err) {
+    err.statusCode = 400;
+    done(err, undefined);
+  }
+});
+
 server.addHook("preParsing", (request, reply, payload, done) => {
   if (
     ["POST", "DELETE"].includes(request.method) &&
@@ -75,7 +90,7 @@ server.get<{
         request,
         reply,
         queryParamsMiddleware(IGetOrganizationsQueryString)
-      )
+      ),
   },
   organizationHandler.getOrganizationsHandler()
 );
@@ -88,7 +103,7 @@ server.post<{ readonly Body: OrganizationWithReferentsPost }>(
         request,
         reply,
         requiredBodyMiddleware(OrganizationWithReferentsPost)
-      )
+      ),
   },
   organizationHandler.upsertOrganizationHandler()
 );
@@ -101,7 +116,7 @@ server.get(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      )
+      ),
   },
   organizationHandler.getOrganizationHandler()
 );
@@ -115,7 +130,7 @@ server.delete(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      )
+      ),
   },
   organizationHandler.deleteOrganizationHandler()
 );
@@ -129,7 +144,7 @@ server.get(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      )
+      ),
   },
   referentHandler.getReferentsHandler()
 );
@@ -143,7 +158,7 @@ server.post<{ readonly Body: ReferentFiscalCode }>(
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode),
         requiredBodyMiddleware(ReferentFiscalCode)
-      )
+      ),
   },
   referentHandler.insertReferentHandler()
 );
@@ -156,7 +171,7 @@ server.delete(
         request,
         reply,
         pathParamsMiddleware(IDeleteReferentPathParams)
-      )
+      ),
   },
   referentHandler.deleteReferentHandler()
 );
@@ -172,7 +187,7 @@ server.post<{ readonly Body: GetCompaniesBody; readonly Response: Companies }>(
         request,
         reply,
         requiredBodyMiddleware(GetCompaniesBody)
-      )
+      ),
   },
   getCompaniesHandler()
 );
