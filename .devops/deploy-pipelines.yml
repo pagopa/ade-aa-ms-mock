@@ -94,8 +94,6 @@ stages:
 
   # Prepare_artifact
   - stage: Prepare_artifact
-    dependsOn:
-      - Release
     jobs:
       - job: 'prepare_artifact'
         steps:
