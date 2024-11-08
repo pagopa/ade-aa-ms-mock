@@ -1,6 +1,6 @@
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { fastify, FastifyInstance } from "fastify";
+import { fastify, FastifyInstance, FastifyRequest } from "fastify";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Sequelize } from "sequelize";
 import { Companies } from "../generated/definitions/Companies";
@@ -26,6 +26,8 @@ import { queryParamsMiddleware } from "./middlewares/query_params";
 import { pathParamsMiddleware } from "./middlewares/path_params";
 import { sequelizePostgresOptions } from "./utils/sequelize-options";
 import { initModels } from "./models/dbModels";
+import { ContentTypeParserDoneFunction } from "fastify/types/content-type-parser";
+import { RouteGenericInterface } from "fastify/types/route";
 
 const config = getConfigOrThrow();
 
@@ -52,9 +54,14 @@ const attributeAuthorityPostgresDb = new Sequelize(
 initModels(attributeAuthorityPostgresDb);
 
 server.addContentTypeParser("application/json", { parseAs: "string" }, function(
-  _,
-  body,
-  done
+  _: FastifyRequest<
+    RouteGenericInterface,
+    Server<typeof IncomingMessage, typeof ServerResponse>,
+    IncomingMessage,
+    unknown
+  >,
+  body: string,
+  done: ContentTypeParserDoneFunction
 ) {
   try {
     if (!body) done(null, null);
