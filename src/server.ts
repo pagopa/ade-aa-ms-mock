@@ -3,6 +3,8 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { fastify, FastifyInstance, FastifyRequest } from "fastify";
 import * as TE from "fp-ts/lib/TaskEither";
 import { Sequelize } from "sequelize";
+import { ContentTypeParserDoneFunction } from "fastify/types/content-type-parser";
+import { RouteGenericInterface } from "fastify/types/route";
 import { Companies } from "../generated/definitions/Companies";
 import { GetCompaniesBody } from "../generated/definitions/GetCompaniesBody";
 import { ReferentFiscalCode } from "../generated/definitions/ReferentFiscalCode";
@@ -12,13 +14,13 @@ import { OrganizationWithReferentsPost } from "../generated/definitions/Organiza
 import { getCompaniesHandler } from "./handlers/company";
 import {
   withDoubleRequestMiddlewares,
-  withRequestMiddlewares,
+  withRequestMiddlewares
 } from "./middlewares/request_middleware";
 import { requiredBodyMiddleware } from "./middlewares/required_body_payload";
 import { getConfigOrThrow } from "./utils/config";
 import {
   IDeleteReferentPathParams,
-  IGetOrganizationsQueryString,
+  IGetOrganizationsQueryString
 } from "./models/parameters";
 import * as organizationHandler from "./handlers/organization";
 import * as referentHandler from "./handlers/referent";
@@ -26,8 +28,6 @@ import { queryParamsMiddleware } from "./middlewares/query_params";
 import { pathParamsMiddleware } from "./middlewares/path_params";
 import { sequelizePostgresOptions } from "./utils/sequelize-options";
 import { initModels } from "./models/dbModels";
-import { ContentTypeParserDoneFunction } from "fastify/types/content-type-parser";
-import { RouteGenericInterface } from "fastify/types/route";
 
 const config = getConfigOrThrow();
 
@@ -53,38 +53,32 @@ const attributeAuthorityPostgresDb = new Sequelize(
 // Initialize models and sync them
 initModels(attributeAuthorityPostgresDb);
 
-server.addContentTypeParser("application/json", { parseAs: "string" }, function(
-  _: FastifyRequest<
-    RouteGenericInterface,
-    Server<typeof IncomingMessage, typeof ServerResponse>,
-    IncomingMessage,
-    unknown
-  >,
-  body: string,
-  done: ContentTypeParserDoneFunction
-) {
-  try {
-    if (!body) done(null, null);
-    var json = JSON.parse(body);
-    done(null, json);
-  } catch (err) {
-    err.statusCode = 400;
-    done(err, undefined);
+server.addContentTypeParser(
+  "application/json",
+  { parseAs: "string" },
+  (
+    _: FastifyRequest<
+      RouteGenericInterface,
+      Server<typeof IncomingMessage, typeof ServerResponse>,
+      IncomingMessage,
+      unknown
+    >,
+    body: string,
+    done: ContentTypeParserDoneFunction
+  ) => {
+    try {
+      if (!body) {
+        done(null, null);
+      }
+      const json = JSON.parse(body);
+      done(null, json);
+    } catch (err) {
+      // eslint-disable-next-line functional/immutable-data
+      err.statusCode = 400;
+      done(err, undefined);
+    }
   }
-});
-
-server.addHook("preParsing", (request, reply, payload, done) => {
-  if (
-    ["POST", "DELETE"].includes(request.method) &&
-    request.headers["content-type"] === "application/json" &&
-    request.headers["content-length"] === "0"
-  ) {
-    // eslint-disable-next-line fp/no-delete, functional/immutable-data
-    delete request.headers["content-type"];
-  }
-
-  done();
-});
+);
 
 server.get<{
   readonly Querystring: IGetOrganizationsQueryString;
@@ -97,7 +91,7 @@ server.get<{
         request,
         reply,
         queryParamsMiddleware(IGetOrganizationsQueryString)
-      ),
+      )
   },
   organizationHandler.getOrganizationsHandler()
 );
@@ -110,7 +104,7 @@ server.post<{ readonly Body: OrganizationWithReferentsPost }>(
         request,
         reply,
         requiredBodyMiddleware(OrganizationWithReferentsPost)
-      ),
+      )
   },
   organizationHandler.upsertOrganizationHandler()
 );
@@ -123,7 +117,7 @@ server.get(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      ),
+      )
   },
   organizationHandler.getOrganizationHandler()
 );
@@ -137,7 +131,7 @@ server.delete(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      ),
+      )
   },
   organizationHandler.deleteOrganizationHandler()
 );
@@ -151,7 +145,7 @@ server.get(
         request,
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode)
-      ),
+      )
   },
   referentHandler.getReferentsHandler()
 );
@@ -165,7 +159,7 @@ server.post<{ readonly Body: ReferentFiscalCode }>(
         reply,
         pathParamsMiddleware(KeyOrganizationFiscalCode),
         requiredBodyMiddleware(ReferentFiscalCode)
-      ),
+      )
   },
   referentHandler.insertReferentHandler()
 );
@@ -178,7 +172,7 @@ server.delete(
         request,
         reply,
         pathParamsMiddleware(IDeleteReferentPathParams)
-      ),
+      )
   },
   referentHandler.deleteReferentHandler()
 );
@@ -194,7 +188,7 @@ server.post<{ readonly Body: GetCompaniesBody; readonly Response: Companies }>(
         request,
         reply,
         requiredBodyMiddleware(GetCompaniesBody)
-      ),
+      )
   },
   getCompaniesHandler()
 );
